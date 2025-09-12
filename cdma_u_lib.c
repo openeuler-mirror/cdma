@@ -16,6 +16,7 @@
 #include "cdma_u_context.h"
 #include "cdma_u_log.h"
 #include "cdma_u_lib.h"
+#include "cdma_u_queue.h"
 #include "cdma_u_common.h"
 
 struct dma_device *dma_get_device_list(uint32_t *num_devices)
@@ -71,4 +72,31 @@ void dma_delete_context(struct dma_context *ctx)
 	}
 
 	cdma_delete_context(ctx);
+}
+
+struct dma_queue *dma_alloc_queue(struct dma_context *ctx, struct queue_cfg *cfg)
+{
+	struct dma_queue *queue;
+
+	if (!ctx || !cfg) {
+		CDMA_LOG_ERR("alloc queue parameter is null.\n");
+		return NULL;
+	}
+
+	queue = cdma_alloc_queue(ctx, cfg);
+	if (!queue) {
+		CDMA_LOG_ERR("alloc queue failed.\n");
+		return NULL;
+	}
+
+	return queue;
+}
+
+void dma_free_queue(struct dma_queue *queue)
+{
+	if (!queue) {
+		return;
+	}
+
+	cdma_free_queue(queue);
 }

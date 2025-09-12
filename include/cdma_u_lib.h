@@ -52,12 +52,35 @@ struct dma_cr {
 	uint32_t		tpn;
 };
 
+struct queue_cfg {
+	uint32_t queue_depth;
+	uint8_t priority;
+	uint64_t user_ctx;
+	uint32_t dcna;
+	struct dev_eid rmt_eid;
+	bool event_mode; /* false: poll mode, true: interrupt mode. */
+};
+
+struct dma_queue {
+	struct dma_context *ctx;
+	struct queue_cfg cfg;
+	uint32_t queue_id;
+};
+
 struct dma_seg {
 	uint64_t handle;
 	uint64_t sva;
 	uint64_t len;
 	uint32_t tid; /* data valid only in bit 0-19 */
 	uint32_t token_value;
+	bool token_value_valid;
+};
+
+struct dma_seg_cfg {
+	uint64_t addr;
+	uint64_t len;
+	uint32_t token_value;
+	uint32_t tid; /* used by import segment, data valid only in bit 0-19*/
 	bool token_value_valid;
 };
 
@@ -108,5 +131,50 @@ struct dma_context *dma_create_context(struct dma_device *dma_dev);
  */
 void dma_delete_context(struct dma_context *ctx);
 
+/**
+ * dma_alloc_queue - Alloc DMA queue
+ * @ctx: DMA context pointer;
+ * @cfg: DMA queue configuration information pointer;
+ * Return: DMA queue structure pointer
+ */
+struct dma_queue *dma_alloc_queue(struct dma_context *ctx, struct queue_cfg *cfg);
+
+/**
+ * dma_free_queue - Free DMA queue
+ * @queue: DMA queue pointer;
+ * Return: NA
+ */
+void dma_free_queue(struct dma_queue *queue);
+
+/**
+ * dma_register_seg - Register local segment
+ * @ctx: DMA context pointer;
+ * @cfg: DMA segment configuration information pointer;
+ * Return: DMA segment structure pointer
+ */
+struct dma_seg *dma_register_seg(struct dma_context *ctx,
+				 struct dma_seg_cfg *cfg);
+
+/**
+ * dma_unregister_seg - Unregister local segment
+ * @ctx: DMA context pointer;
+ * @seg: DMA segment pointer;
+ * Return: NA
+ */
+void dma_unregister_seg(struct dma_context *ctx, struct dma_seg *seg);
+
+/**
+ * dma_import_seg - Import the remote segment
+ * @cfg: DMA segment configuration information pointer;
+ * Return: DMA segment structure pointer
+ */
+struct dma_seg *dma_import_seg(struct dma_seg_cfg *cfg);
+
+/**
+ * dma_unimport_seg - Unimport the remote segment
+ * @seg: DMA segment pointer;
+ * Return: NA
+ */
+void dma_unimport_seg(struct dma_seg *seg);
 
 #endif

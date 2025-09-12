@@ -6,22 +6,17 @@
  * MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef __CDMA_U_JFS_H__
-#define __CDMA_U_JFS_H__
-
-#include "cdma_u_lib.h"
+#ifndef __CDMA_QUEUE_H__
+#define __CDMA_QUEUE_H__
+#include <cdma_abi.h>
+#include "cdma_u_types.h"
+#include "cdma_u_log.h"
+#include "cdma_u_jfc.h"
+#include "cdma_u_jfs.h"
+#include "cdma_u_tp.h"
 #include "cdma_u_common.h"
 
-
-#define MAX_SQE_BB_NUM 4
-
-#define SQE_WRITE_NOTIFY_CTL_LEN 80
-
-
-#define SQE_ATOMIC_DATA_FIELD 64
-
-struct dma_jfs *cdma_u_create_jfs(struct dma_context *ctx,
-				  struct dma_jfs_cfg *cfg);
-int cdma_u_delete_jfs(struct dma_jfs *jfs);
+struct dma_queue *cdma_alloc_queue(struct dma_context *ctx, struct queue_cfg *cfg);
+void cdma_free_queue(struct dma_queue *queue);
 
 #endif

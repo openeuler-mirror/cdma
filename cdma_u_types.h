@@ -99,5 +99,21 @@ typedef struct dma_jfs {
 	uint64_t handle;
 } dma_jfs_t;
 
+struct dma_queue_cfg {
+	struct dma_jfc_cfg cdma_jfc_cfg;
+	struct dma_jfs_cfg cdma_jfs_cfg;
+	struct dma_tp_cfg cdma_tp_cfg;
+};
+
+struct cdma_u_queue {
+	struct dma_queue base;
+	struct dma_jfs *cdma_jfs;
+	struct dma_jfc *cdma_jfc;
+	struct dma_tp *cdma_tp;
+	struct dma_jfce *cdma_jfce;
+	struct dma_queue_cfg queue_cfg;
+	uint64_t handle;
+};
+
 
 #endif

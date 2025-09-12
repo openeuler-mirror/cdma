@@ -212,6 +212,11 @@ static inline void cdma_u_free_buf(void *buf, uint32_t buf_size)
 	(void)munmap(buf, buf_size);
 }
 
+static inline struct cdma_u_queue *to_cdma_u_queue(struct dma_queue *queue)
+{
+	return container_of(queue, struct cdma_u_queue, base);
+}
+
 void *cdma_u_alloc_buf(uint32_t buf_size);
 
 int cdma_u_alloc_queue_buf(struct cdma_u_jetty_queue *q, uint32_t max_cnt,

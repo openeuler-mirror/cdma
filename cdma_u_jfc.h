@@ -55,6 +55,8 @@ dma_jfc_t *cdma_u_create_jfc(struct dma_context *ctx, dma_jfc_cfg_t *cfg);
 
 dma_status cdma_u_delete_jfc(dma_jfc_t *jfc);
 
+dma_status cdma_u_rearm_jfc(dma_jfc_t *jfc, bool solicited_only);
+
 void cdma_u_clean_jfc(dma_jfc_t *jfc, uint32_t jetty_id);
 
 #endif
