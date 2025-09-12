@@ -17,6 +17,15 @@
 
 #define DMA_EID_SIZE (16)
 
+union dma_jfs_flag {
+	struct {
+		uint32_t error_suspend  : 1;  /* 0: error continue; 1: error suspend */
+		uint32_t order_comp	: 1;  /* 0: not support; 1: support out-of-order completion */
+		uint32_t reserved	: 30;
+	} bs;
+	uint32_t value;
+};
+
 typedef struct dma_tp_cfg {
 	uint32_t scna;
 	uint32_t dcna;
@@ -66,5 +75,29 @@ typedef struct dma_jfc {
 	uint32_t		comp_events_acked;
 	uint32_t		async_events_acked;
 } dma_jfc_t;
+
+typedef struct dma_jfs_cfg {
+	uint32_t depth;
+	union dma_jfs_flag flag;
+	uint8_t priority;
+	uint8_t max_sge;
+	uint8_t max_rsge;
+	uint8_t rnr_retry;
+	uint8_t err_timeout;
+	struct dma_jfc *jfc;
+	uint32_t queue_id;
+	uint32_t rmt_eid;
+	uint32_t pld_token_id;
+	uint32_t tpn;
+	uint32_t eid_idx;
+} dma_jfs_cfg_t;
+
+typedef struct dma_jfs {
+	struct dma_context *dma_ctx;
+	uint32_t jfs_id;
+	struct dma_jfs_cfg jfs_cfg;
+	uint64_t handle;
+} dma_jfs_t;
+
 
 #endif

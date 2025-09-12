@@ -127,6 +127,12 @@ struct cdma_u_context {
 	int async_fd;
 };
 
+struct cdma_u_jfs {
+	struct dma_jfs base;
+	struct cdma_u_jetty_queue sq;
+	uint32_t jfs_type;
+};
+
 struct cdma_u_jfc {
 	dma_jfc_t			base;
 	struct cdma_u_jetty_queue	cq;
@@ -194,6 +200,11 @@ static inline struct cdma_u_context *to_cdma_u_ctx(struct dma_context *ctx)
 static inline struct cdma_u_jfc *to_cdma_u_jfc(dma_jfc_t *jfc)
 {
 	return container_of(jfc, struct cdma_u_jfc, base);
+}
+
+static inline struct cdma_u_jfs *to_cdma_u_jfs(struct dma_jfs *jfs)
+{
+	return container_of(jfs, struct cdma_u_jfs, base);
 }
 
 static inline void cdma_u_free_buf(void *buf, uint32_t buf_size)

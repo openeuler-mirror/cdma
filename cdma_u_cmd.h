@@ -26,5 +26,9 @@ int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce);
 int cdma_cmd_create_ctp(struct dma_context *ctx, struct dma_tp *ctp,
 			struct dma_tp_cfg *cfg);
 int cdma_cmd_delete_ctp(struct dma_tp *ctp);
+int cdma_u_cmd_create_jfs(struct dma_context *ctx, struct dma_jfs *jfs,
+			  struct dma_jfs_cfg *cfg,
+			  struct cdma_cmd_udrv_priv *udata);
+int cdma_u_cmd_delete_jfs(struct dma_jfs *jfs);
 
 #endif
