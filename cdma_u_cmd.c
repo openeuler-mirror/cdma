@@ -14,6 +14,41 @@
 #include "cdma_u_log.h"
 #include "cdma_u_cmd.h"
 
+int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce)
+{
+	struct cdma_cmd_create_jfce_args arg = {0};
+	struct cdma_ioctl_hdr hdr = {0};
+	int ret;
+
+	if (ctx == NULL || ctx->dma_dev == NULL || ctx->dma_dev->fd < 0) {
+		CDMA_LOG_ERR("create jfce cmd parameter invalid.\n");
+		return -EINVAL;
+	}
+
+	hdr.command = (uint32_t)CDMA_CMD_CREATE_JFCE;
+	hdr.args_len = (uint32_t)sizeof(arg);
+	hdr.args_addr = (uint64_t)&arg;
+
+	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
+	if (ret != 0) {
+		CDMA_LOG_ERR("ioctl execute create jfce failed, ret = %d.\n", ret);
+		return ret;
+	}
+
+	jfce->fd = arg.out.fd;
+	jfce->id = arg.out.id;
+
+	return 0;
+}
+
+static inline void cdma_cmd_set_udrv_priv(struct cdma_cmd_udrv_priv *arg,
+					  struct cdma_cmd_udrv_priv *udata)
+{
+	if (arg != NULL && udata != NULL) {
+		*arg = *udata;
+	}
+}
+
 int cdma_cmd_create_ctp(struct dma_context *ctx, struct dma_tp *ctp,
 			struct dma_tp_cfg *cfg)
 {

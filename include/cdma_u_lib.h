@@ -23,11 +23,54 @@ struct dma_device {
 	struct cdma_device_attr attr;
 };
 
+typedef enum {
+	DMA_CR_OPC_SEND = 0x00,
+	DMA_CR_OPC_SEND_WITH_IMM,
+	DMA_CR_OPC_SEND_WITH_INV,
+	DMA_CR_OPC_WRITE_WITH_IMM,
+} dma_cr_opcode_t;
+
+typedef union dma_cr_flag {
+	struct {
+		uint8_t s_r : 1;
+		uint8_t jetty : 1;
+		uint8_t suspend_done : 1;
+		uint8_t flush_err_done : 1;
+		uint8_t reserved : 4;
+	} bs;
+	uint8_t value;
+} dma_cr_flag_t;
+
+struct dma_cr {
+	enum dma_cr_status	status;
+	uint64_t		user_ctx;
+	dma_cr_opcode_t		opcode;
+	dma_cr_flag_t		flag;
+	uint32_t		completion_len;
+	uint32_t		local_id;
+	uint32_t		remote_id;
+	uint32_t		tpn;
+};
+
+struct dma_seg {
+	uint64_t handle;
+	uint64_t sva;
+	uint64_t len;
+	uint32_t tid; /* data valid only in bit 0-19 */
+	uint32_t token_value;
+	bool token_value_valid;
+};
+
 struct dma_context {
 	struct dma_device *dma_dev;
 	uint32_t tid;
 	int async_fd;
 };
+
+typedef enum {
+	DMA_STATUS_OK,
+	DMA_STATUS_INVAL,
+} dma_status;
 
 /**
  * dma_get_device_list - Get DMA device list

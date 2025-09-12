@@ -9,6 +9,11 @@
 #ifndef __CDMA_U_DB_H__
 #define __CDMA_U_DB_H__
 #include "cdma_u_common.h"
+
+void *cdma_u_alloc_sw_db(struct cdma_u_context *ctx);
+
+void cdma_u_free_sw_db(struct cdma_u_context *ctx, uint32_t *db);
+
 int cdma_u_alloc_db(struct dma_context *dma_ctx, struct cdma_u_doorbell *db);
 
 void cdma_u_free_db(struct dma_context *dma_ctx, struct cdma_u_doorbell *db);

@@ -12,7 +12,19 @@
 #include "cdma_u_lib.h"
 #include "cdma_u_types.h"
 
+static inline void cdma_u_set_udata(struct cdma_cmd_udrv_priv *udrv_data,
+				    void *in_addr, uint32_t in_len,
+				    void *out_addr, uint32_t out_len)
+{
+	udrv_data->in_addr = (uint64_t)in_addr;
+	udrv_data->in_len = in_len;
+	udrv_data->out_addr = (uint64_t)out_addr;
+	udrv_data->out_len = out_len;
+}
+
+int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce);
 int cdma_cmd_create_ctp(struct dma_context *ctx, struct dma_tp *ctp,
 			struct dma_tp_cfg *cfg);
 int cdma_cmd_delete_ctp(struct dma_tp *ctp);
+
 #endif

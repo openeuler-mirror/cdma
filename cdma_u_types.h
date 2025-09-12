@@ -32,4 +32,39 @@ typedef struct dma_tp {
 	uint64_t handle;
 } dma_tp_t;
 
+typedef struct dma_jfce {
+	struct dma_context	*dma_ctx;
+	int			fd;
+	int			id;
+} dma_jfce_t;
+
+typedef union dma_jfc_flag {
+	struct {
+		uint32_t    lock_free : 1;
+		uint32_t    jfc_inline : 1;
+		uint32_t    reserved : 30;
+	} bs;
+	uint32_t value;
+} dma_jfc_flag_t;
+
+typedef struct dma_jfc_cfg {
+	uint32_t depth;
+	dma_jfc_flag_t flag;
+	uint32_t ceqn;
+	dma_jfce_t *jfce;
+	uint64_t user_ctx;
+	uint32_t queue_id;
+} dma_jfc_cfg_t;
+
+typedef struct dma_jfc {
+	struct dma_context	*dma_ctx;
+	uint32_t		jfc_id;
+	dma_jfc_cfg_t		jfc_cfg;
+	uint64_t		handle;
+	pthread_mutex_t		event_mutex;
+	pthread_cond_t		event_cond;
+	uint32_t		comp_events_acked;
+	uint32_t		async_events_acked;
+} dma_jfc_t;
+
 #endif
