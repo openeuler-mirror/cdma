@@ -23,6 +23,12 @@ struct dma_device {
 	struct cdma_device_attr attr;
 };
 
+struct dma_context {
+	struct dma_device *dma_dev;
+	uint32_t tid;
+	int async_fd;
+};
+
 /**
  * dma_get_device_list - Get DMA device list
  * @num_devices: DMA device number;
@@ -44,5 +50,20 @@ void dma_free_device_list(struct dma_device *dev_list, uint32_t num_devices);
  * Return: DMA device structure pointer
  */
 struct dma_device *dma_get_device_by_eid(struct dev_eid *eid);
+
+/**
+ * dma_create_context - Create DMA context
+ * @dma_dev: DMA device pointer;
+ * Return: DMA context structure pointer
+ */
+struct dma_context *dma_create_context(struct dma_device *dma_dev);
+
+/**
+ * dma_delete_context - Delete DMA context
+ * @ctx: DMA context pointer;
+ * Return: NA
+ */
+void dma_delete_context(struct dma_context *ctx);
+
 
 #endif

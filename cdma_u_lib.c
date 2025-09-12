@@ -13,8 +13,10 @@
 #include <stdbool.h>
 #include <cdma_abi.h>
 #include "cdma_u_device.h"
+#include "cdma_u_context.h"
 #include "cdma_u_log.h"
 #include "cdma_u_lib.h"
+#include "cdma_u_common.h"
 
 struct dma_device *dma_get_device_list(uint32_t *num_devices)
 {
@@ -43,4 +45,30 @@ struct dma_device *dma_get_device_by_eid(struct dev_eid *eid)
 		return NULL;
 
 	return cdma_get_device_by_eid(eid);
+}
+
+struct dma_context *dma_create_context(struct dma_device *dma_dev)
+{
+	struct dma_context *ctx;
+
+	if (!dma_dev) {
+		return NULL;
+	}
+
+	ctx = cdma_create_context(dma_dev);
+	if (!ctx) {
+		CDMA_LOG_ERR("create context failed.\n");
+		return NULL;
+	}
+
+	return ctx;
+}
+
+void dma_delete_context(struct dma_context *ctx)
+{
+	if (!ctx) {
+		return;
+	}
+
+	cdma_delete_context(ctx);
 }
