@@ -56,6 +56,77 @@ static void cdma_fill_sge(dma_sge_t *rmt_sge, dma_sge_t *local_sge,
 	rmt_sge->seg = *rmt_seg;
 }
 
+dma_status cdma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		    struct dma_seg *local_seg, uint64_t cmp, uint64_t swap)
+{
+	dma_jfs_wr_t wr = {.opcode = CDMA_WR_OPC_CAS};
+	struct cdma_u_queue *cdma_queue;
+	dma_sge_t rmt_sge, local_sge;
+	dma_jfs_wr_t *bad_wr = NULL;
+	int ret;
+
+	if (cdma_rw_check(rmt_seg, local_seg)) {
+		CDMA_LOG_ERR("cas param check failed.\n");
+		return DMA_STATUS_INVAL;
+	}
+
+	cdma_fill_comm_wr(&wr, queue);
+
+	cdma_fill_sge(&rmt_sge, &local_sge, rmt_seg, local_seg);
+
+	wr.cas.src = &local_sge;
+	wr.cas.dst = &rmt_sge;
+
+	if (local_sge.len <= CDMA_ATOMIC_LEN_8) {
+		wr.cas.cmp_data = cmp;
+		wr.cas.swap_data = swap;
+	} else {
+		wr.cas.cmp_addr = cmp;
+		wr.cas.swap_addr = swap;
+	}
+
+	cdma_queue = to_cdma_u_queue(queue);
+	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
+	if (ret) {
+		CDMA_LOG_ERR("post jfs for cas failed, ret = %d.\n", ret);
+		return DMA_STATUS_INVAL;
+	}
+
+	return DMA_STATUS_OK;
+}
+
+dma_status cdma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		    struct dma_seg *local_seg, uint64_t operand)
+{
+	dma_jfs_wr_t wr = {.opcode = CDMA_WR_OPC_FADD};
+	struct cdma_u_queue *cdma_queue;
+	dma_sge_t rmt_sge, local_sge;
+	dma_jfs_wr_t *bad_wr = NULL;
+	int ret;
+
+	if (cdma_rw_check(rmt_seg, local_seg)) {
+		CDMA_LOG_ERR("faa param check failed.\n");
+		return DMA_STATUS_INVAL;
+	}
+
+	cdma_fill_comm_wr(&wr, queue);
+
+	cdma_fill_sge(&rmt_sge, &local_sge, rmt_seg, local_seg);
+
+	wr.faa.src = &local_sge;
+	wr.faa.dst = &rmt_sge;
+	wr.faa.operand = operand;
+
+	cdma_queue = to_cdma_u_queue(queue);
+	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
+	if (ret) {
+		CDMA_LOG_ERR("post jfs for faa failed, ret = %d.\n", ret);
+		return DMA_STATUS_INVAL;
+	}
+
+	return DMA_STATUS_OK;
+}
+
 dma_status cdma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
 		      struct dma_seg *local_seg, struct dma_seg *notify_seg,
 		      uint64_t notify_data)

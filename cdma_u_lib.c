@@ -169,6 +169,26 @@ dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	return cdma_read(queue, rmt_seg, local_seg);
 }
 
+dma_status dma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
+				   struct dma_seg *local_seg, uint64_t cmp, uint64_t swap)
+{
+	if (!queue || !rmt_seg || !local_seg) {
+		return DMA_STATUS_INVAL;
+	}
+
+	return cdma_cas(queue, rmt_seg, local_seg, cmp, swap);
+}
+
+dma_status dma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		   struct dma_seg *local_seg, uint64_t add)
+{
+	if (!queue || !rmt_seg || !local_seg) {
+		return DMA_STATUS_INVAL;
+	}
+
+	return cdma_faa(queue, rmt_seg, local_seg, add);
+}
+
 dma_status dma_write_with_notify(struct dma_queue *queue,
 				 struct dma_seg *rmt_seg,
 				 struct dma_seg *local_seg,

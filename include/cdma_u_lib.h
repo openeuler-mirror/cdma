@@ -199,6 +199,29 @@ dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 		    struct dma_seg *local_seg);
 
 /**
+ * dma_cas - DMA CAS operation
+ * @queue: DMA queue pointer;
+ * @rmt_seg: the remote segment pointer;
+ * @local_seg: the local segment pointer;
+ * @cmp: data address used for comparison;
+ * @swap: data address used for swap;
+ * Return: operation result, DMA_STATUS_OK on success
+ */
+dma_status dma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		   struct dma_seg *local_seg, uint64_t cmp, uint64_t swap);
+
+/**
+ * dma_faa - DMA FAA operation
+ * @queue: DMA queue pointer;
+ * @rmt_seg: the remote segment pointer;
+ * @local_seg: the local segment pointer;
+ * @add: add data for faa operation;
+ * Return: operation result, DMA_STATUS_OK on success
+ */
+dma_status dma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		   struct dma_seg *local_seg, uint64_t add);
+
+/**
  * dma_write_with_notify - DMA write with notify operation
  * @queue: DMA queue pointer;
  * @rmt_seg: the remote segment pointer;

@@ -51,7 +51,9 @@ typedef enum dma_wr_opcode {
 	CDMA_WR_OPC_WRITE = 0x00,
 	CDMA_WR_OPC_WRITE_NOTIFY = 0x02,
 	CDMA_WR_OPC_READ = 0x10,
+	CDMA_WR_OPC_CAS = 0x20,
 	CDMA_WR_OPC_SWAP = 0x21,
+	CDMA_WR_OPC_FADD = 0x22,
 	CDMA_WR_OPC_NOP = 0x51,
 	CDMA_WR_OPC_LAST
 } dma_wr_opcode_t;
@@ -92,6 +94,28 @@ typedef struct dma_rw_wr {
 	uint32_t notify_tokenvalue;
 } dma_rw_wr_t;
 
+typedef struct dma_cas_wr {
+	dma_sge_t *dst;
+	dma_sge_t *src;
+	union {
+		uint64_t cmp_data;
+		uint64_t cmp_addr;
+	};
+	union {
+		uint64_t swap_data;
+		uint64_t swap_addr;
+	};
+} dma_cas_wr_t;
+
+typedef struct dma_faa_wr {
+	dma_sge_t *dst;
+	dma_sge_t *src;
+	union {
+		uint64_t operand;
+		uint64_t operand_addr;
+	};
+} dma_faa_wr_t;
+
 typedef struct dma_jfs_wr {
 	dma_wr_opcode_t opcode;
 	dma_jfs_wr_flag_t flag;
@@ -100,6 +124,8 @@ typedef struct dma_jfs_wr {
 	uint32_t rmt_eid;
 	union {
 		dma_rw_wr_t rw;
+		dma_cas_wr_t cas;
+		dma_faa_wr_t faa;
 	};
 	struct dma_jfs_wr *next;
 } dma_jfs_wr_t;
