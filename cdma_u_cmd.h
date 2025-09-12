@@ -22,6 +22,11 @@ static inline void cdma_u_set_udata(struct cdma_cmd_udrv_priv *udrv_data,
 	udrv_data->out_len = out_len;
 }
 
+dma_status cdma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		      struct dma_seg *local_seg, struct dma_seg *notify_seg,
+		      uint64_t notify_data);
+dma_status cdma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		     struct dma_seg *local_seg);
 int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce);
 int cdma_cmd_create_ctp(struct dma_context *ctx, struct dma_tp *ctp,
 			struct dma_tp_cfg *cfg);

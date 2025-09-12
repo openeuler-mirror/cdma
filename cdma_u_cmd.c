@@ -13,6 +13,125 @@
 #include <cdma_abi.h>
 #include "cdma_u_log.h"
 #include "cdma_u_cmd.h"
+#include "cdma_u_jfs.h"
+#include "cdma_u_common.h"
+
+static int cdma_rw_check(struct dma_seg *rmt_seg, struct dma_seg *local_seg)
+{
+	if (rmt_seg->len == 0 || local_seg->len == 0) {
+		CDMA_LOG_ERR("segment check invalid len.\n");
+		return -EINVAL;
+	}
+
+	if (rmt_seg->sva == 0 || local_seg->sva == 0) {
+		CDMA_LOG_ERR("segment check invalid address.\n");
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static inline void cdma_fill_comm_wr(dma_jfs_wr_t *wr, struct dma_queue *queue)
+{
+	struct cdma_u_queue *cdma_queue = to_cdma_u_queue(queue);
+
+	wr->flag.bs.complete_enable = 1;
+	wr->flag.bs.fence = 1;
+	wr->user_ctx = queue->cfg.user_ctx;
+	if (cdma_queue->cdma_tp)
+		wr->tpn = cdma_queue->cdma_tp->tpn;
+	wr->rmt_eid = queue->cfg.rmt_eid.dw0;
+	wr->next = NULL;
+}
+
+static void cdma_fill_sge(dma_sge_t *rmt_sge, dma_sge_t *local_sge,
+			  struct dma_seg *rmt_seg, struct dma_seg *local_seg)
+{
+	local_sge->addr = local_seg->sva;
+	local_sge->len = local_seg->len;
+	local_sge->seg = *local_seg;
+
+	rmt_sge->addr = rmt_seg->sva;
+	rmt_sge->len = rmt_seg->len;
+	rmt_sge->seg = *rmt_seg;
+}
+
+dma_status cdma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		      struct dma_seg *local_seg, struct dma_seg *notify_seg,
+		      uint64_t notify_data)
+{
+	dma_jfs_wr_t wr = {.opcode = CDMA_WR_OPC_WRITE};
+	struct cdma_u_queue *cdma_queue;
+	dma_sge_t rmt_sge, local_sge;
+	dma_jfs_wr_t *bad_wr = NULL;
+	int ret;
+
+	if (cdma_rw_check(rmt_seg, local_seg)) {
+		CDMA_LOG_ERR("write param check failed.\n");
+		return DMA_STATUS_INVAL;
+	}
+
+	if (notify_seg) {
+		wr.opcode = CDMA_WR_OPC_WRITE_NOTIFY;
+		wr.rw.notify_addr = notify_seg->sva;
+		wr.rw.notify_data = notify_data;
+		wr.rw.notify_tokenid = notify_seg->tid;
+		wr.rw.notify_tokenvalue = notify_seg->token_value;
+	}
+
+	cdma_fill_comm_wr(&wr, queue);
+
+	cdma_fill_sge(&rmt_sge, &local_sge, rmt_seg, local_seg);
+
+	wr.rw.src.num_sge = 1;
+	wr.rw.src.sge = &local_sge;
+
+	wr.rw.dst.num_sge = 1;
+	wr.rw.dst.sge = &rmt_sge;
+
+	cdma_queue = to_cdma_u_queue(queue);
+	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
+	if (ret) {
+		CDMA_LOG_ERR("post jfs for write failed, ret = %d.\n", ret);
+		return DMA_STATUS_INVAL;
+	}
+
+	return DMA_STATUS_OK;
+}
+
+dma_status cdma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		     struct dma_seg *local_seg)
+{
+	dma_jfs_wr_t wr = {.opcode = CDMA_WR_OPC_READ};
+	struct cdma_u_queue *cdma_queue;
+	dma_sge_t rmt_sge, local_sge;
+	dma_jfs_wr_t *bad_wr = NULL;
+	int ret;
+
+	if (cdma_rw_check(rmt_seg, local_seg)) {
+		CDMA_LOG_ERR("read param check failed.\n");
+		return DMA_STATUS_INVAL;
+	}
+
+	cdma_fill_comm_wr(&wr, queue);
+
+	cdma_fill_sge(&rmt_sge, &local_sge, rmt_seg, local_seg);
+
+	wr.rw.src.num_sge = 1;
+	wr.rw.src.sge = &rmt_sge;
+
+	wr.rw.dst.num_sge = 1;
+	wr.rw.dst.sge = &local_sge;
+
+	cdma_queue = to_cdma_u_queue(queue);
+	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
+	if (ret) {
+		CDMA_LOG_ERR("post jfs for read failed, ret = %d.\n", ret);
+		return DMA_STATUS_INVAL;
+	}
+
+	return DMA_STATUS_OK;
+}
 
 int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce)
 {

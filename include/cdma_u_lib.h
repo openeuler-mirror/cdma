@@ -95,6 +95,7 @@ typedef enum {
 	DMA_STATUS_INVAL,
 } dma_status;
 
+
 /**
  * dma_get_device_list - Get DMA device list
  * @num_devices: DMA device number;
@@ -176,5 +177,40 @@ struct dma_seg *dma_import_seg(struct dma_seg_cfg *cfg);
  * Return: NA
  */
 void dma_unimport_seg(struct dma_seg *seg);
+
+/**
+ * dma_write - DMA write operation
+ * @queue: DMA queue pointer;
+ * @rmt_seg: the remote segment pointer;
+ * @local_seg: the local segment pointer;
+ * Return: operation result, DMA_STATUS_OK on success
+ */
+dma_status dma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		     struct dma_seg *local_seg);
+
+/**
+ * dma_read - DMA read operation
+ * @queue: DMA queue pointer;
+ * @rmt_seg: the remote segment pointer;
+ * @local_seg: the local segment pointer;
+ * Return: operation result, DMA_STATUS_OK on success
+ */
+dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		    struct dma_seg *local_seg);
+
+/**
+ * dma_write_with_notify - DMA write with notify operation
+ * @queue: DMA queue pointer;
+ * @rmt_seg: the remote segment pointer;
+ * @local_seg: the local segment pointer;
+ * @notify_seg: the segment pointer for notify;
+ * @notify_data: data address used for notify;
+ * Return: operation result, DMA_STATUS_OK on success
+ */
+dma_status dma_write_with_notify(struct dma_queue *queue,
+				 struct dma_seg *rmt_seg,
+				 struct dma_seg *local_seg,
+				 struct dma_seg *notify_seg,
+				 uint64_t notify_data);
 
 #endif

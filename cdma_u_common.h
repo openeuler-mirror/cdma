@@ -35,6 +35,9 @@
 #define CDMA_NORMAL_JETTY_TYPE ((int)(~0U >> 1))
 #define CDMA_JFC_DB_OFFSET 0
 
+#define likely(x)	 (__builtin_expect(!!(x), 1))
+#define unlikely(x)   (__builtin_expect(!!(x), 0))
+
 #if INT_MAX >= 9223372036854775807LL
 #define builtin_ilog64_nz(v) \
 	(((int)sizeof(uint32_t) * CHAR_BIT) - __builtin_clz(v))
@@ -141,6 +144,12 @@ struct cdma_u_jfc {
 	uint32_t			mode;
 };
 
+struct cdma_wqe_sge {
+	uint32_t length;
+	uint32_t token_id;
+	uint64_t va;
+};
+
 static inline uint64_t roundup_pow_of_two(uint64_t n)
 {
 	return n == 1ULL ? 1ULL : 1ULL << ilog64(n - 1ULL);
@@ -185,6 +194,12 @@ static inline off_t get_mmap_offset(uint32_t idx, int page_size, uint32_t cmd)
 	cdma_mmap_set_index(idx, &offset);
 
 	return offset * page_size;
+}
+
+static inline void *cdma_update_ptr(uint8_t *ptr, uint32_t inc, uint8_t *qbuf, uint8_t *qbuf_end)
+{
+	return ((ptr + inc) < qbuf_end) ?
+		(ptr + inc) : (qbuf + (ptr + inc - qbuf_end));
 }
 
 static inline void mmio_memcpy_x64(uint64_t *dest, uint64_t *val)

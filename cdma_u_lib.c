@@ -16,6 +16,7 @@
 #include "cdma_u_context.h"
 #include "cdma_u_log.h"
 #include "cdma_u_lib.h"
+#include "cdma_cmd.h"
 #include "cdma_u_queue.h"
 #include "cdma_u_common.h"
 #include "cdma_u_segment.h"
@@ -146,4 +147,37 @@ void dma_unimport_seg(struct dma_seg *seg)
 	}
 
 	cdma_unimport_seg(seg);
+}
+
+dma_status dma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		     struct dma_seg *local_seg)
+{
+	if (!queue || !rmt_seg || !local_seg) {
+		return DMA_STATUS_INVAL;
+	}
+
+	return cdma_write(queue, rmt_seg, local_seg, NULL, 0);
+}
+
+dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
+		    struct dma_seg *local_seg)
+{
+	if (!queue || !rmt_seg || !local_seg) {
+		return DMA_STATUS_INVAL;
+	}
+
+	return cdma_read(queue, rmt_seg, local_seg);
+}
+
+dma_status dma_write_with_notify(struct dma_queue *queue,
+				 struct dma_seg *rmt_seg,
+				 struct dma_seg *local_seg,
+				 struct dma_seg *notify_seg,
+				 uint64_t notify_data)
+{
+	if (!queue || !rmt_seg || !local_seg || !notify_seg) {
+		return DMA_STATUS_INVAL;
+	}
+
+	return cdma_write(queue, rmt_seg, local_seg, notify_seg, notify_data);
 }
