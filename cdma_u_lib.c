@@ -18,6 +18,7 @@
 #include "cdma_u_lib.h"
 #include "cdma_u_queue.h"
 #include "cdma_u_common.h"
+#include "cdma_u_segment.h"
 
 struct dma_device *dma_get_device_list(uint32_t *num_devices)
 {
@@ -99,4 +100,50 @@ void dma_free_queue(struct dma_queue *queue)
 	}
 
 	cdma_free_queue(queue);
+}
+
+struct dma_seg *dma_register_seg(struct dma_context *ctx,
+				 struct dma_seg_cfg *cfg)
+{
+	struct dma_seg *seg;
+
+	if (!ctx || !cfg || cfg->addr == 0 || cfg->len == 0) {
+		CDMA_LOG_ERR("register seg parameter is invalid.\n");
+		return NULL;
+	}
+
+	seg = cdma_register_seg(ctx, cfg);
+	if (!seg) {
+		CDMA_LOG_ERR("register seg failed.\n");
+		return NULL;
+	}
+
+	return seg;
+}
+
+void dma_unregister_seg(struct dma_context *ctx, struct dma_seg *seg)
+{
+	if (!ctx || !seg) {
+		return;
+	}
+
+	cdma_unregister_seg(ctx, seg);
+}
+
+struct dma_seg *dma_import_seg(struct dma_seg_cfg *cfg)
+{
+	if (!cfg || cfg->addr == 0 || cfg->len == 0) {
+		CDMA_LOG_ERR("import seg parameter is invalid.\n");
+		return NULL;
+	}
+	return cdma_import_seg(cfg);
+}
+
+void dma_unimport_seg(struct dma_seg *seg)
+{
+	if (!seg) {
+		return;
+	}
+
+	cdma_unimport_seg(seg);
 }

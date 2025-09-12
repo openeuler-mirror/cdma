@@ -9,7 +9,7 @@
 #include <string.h>
 #include "cdma_u_db.h"
 #include "cdma_u_log.h"
-#include "cdma_cmd.h"
+#include "cdma_u_cmd.h"
 #include "cdma_u_log.h"
 #include "cdma_u_jfc.h"
 #include "cdma_u_jfs.h"

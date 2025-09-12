@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 #include <sys/ioctl.h>
-#include "cdma_cmd.h"
+#include "cdma_u_cmd.h"
 #include "cdma_u_queue.h"
 
 static int cdma_u_cmd_create_queue(struct dma_context *ctx,
