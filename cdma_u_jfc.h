@@ -12,6 +12,12 @@
 #include "cdma_u_common.h"
 
 #define CDMA_U_MIN_JFC_DEPTH 64
+#define CDMA_JFC_HW_DB_OFFSET 0x40
+
+enum {
+	CDMA_CQ_DB,
+	CDMA_CQ_ARM_DB
+};
 
 struct cdma_u_jfc_cqe {
 	/* DW0 */
@@ -54,6 +60,12 @@ dma_status cdma_u_delete_jfce(dma_jfce_t *jfce);
 dma_jfc_t *cdma_u_create_jfc(struct dma_context *ctx, dma_jfc_cfg_t *cfg);
 
 dma_status cdma_u_delete_jfc(dma_jfc_t *jfc);
+
+int cdma_u_poll_jfc(dma_jfc_t *jfc, uint32_t cr_cnt, struct dma_cr *cr);
+
+int cdma_u_wait_jfc(dma_jfce_t *jfce, uint32_t jfc_cnt, int time_out);
+
+void cdma_u_ack_jfc(dma_jfc_t *jfc, uint32_t events);
 
 dma_status cdma_u_rearm_jfc(dma_jfc_t *jfc, bool solicited_only);
 

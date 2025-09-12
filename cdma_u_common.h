@@ -35,6 +35,10 @@
 #define CDMA_NORMAL_JETTY_TYPE ((int)(~0U >> 1))
 #define CDMA_JFC_DB_OFFSET 0
 
+#define MAP_INDEX_MASK 0xffffff
+#define CDMA_GET_AE_FAIL 0x1000
+#define CDMA_GET_AE_SUCCESS 0
+
 #define likely(x)	 (__builtin_expect(!!(x), 1))
 #define unlikely(x)   (__builtin_expect(!!(x), 0))
 
@@ -210,6 +214,12 @@ static inline void mmio_memcpy_x64(uint64_t *dest, uint64_t *val)
 static inline struct cdma_u_context *to_cdma_u_ctx(struct dma_context *ctx)
 {
 	return container_of(ctx, struct cdma_u_context, dma_ctx);
+}
+
+static inline void cdma_u_write64(uint64_t *dest, uint64_t *val)
+{
+	atomic_store_explicit((_Atomic(uint64_t) *)(void *)dest,
+			      (uint64_t)(*val), memory_order_relaxed);
 }
 
 static inline struct cdma_u_jfc *to_cdma_u_jfc(dma_jfc_t *jfc)

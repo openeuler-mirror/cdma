@@ -184,6 +184,177 @@ static struct cdma_u_jfc_cqe *cdma_u_get_next_cqe(struct cdma_u_jfc *jfc,
 	return cqe;
 }
 
+static struct cdma_u_jetty_queue *cdma_u_update_jetty_idx(struct cdma_u_jfc_cqe *cqe)
+{
+	struct cdma_u_jetty_queue *queue;
+
+	queue = (struct cdma_u_jetty_queue *)((uint64_t)cqe->user_data[1] <<
+			CDMA_ADDR_SHIFT | cqe->user_data[0]);
+	if (!queue) {
+		return NULL;
+	}
+
+	if (!!cqe->fd) {
+		return queue;
+	}
+
+	queue->ci += (cqe->entry_idx - queue->ci) & queue->baseblk_mask;
+
+	return queue;
+}
+
+static enum jfc_poll_state cdma_get_cr_status(uint8_t src_status,
+					      uint8_t substatus,
+					      enum dma_cr_status *cr_status)
+{
+struct cdma_cqe_status {
+	bool is_valid;
+	enum dma_cr_status cr_status;
+};
+
+	static const struct cdma_cqe_status map[CDMA_CQE_STATUS_NUM][CDMA_CQE_SUB_STATUS_NUM] = {
+		{{true, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS}},
+		{{true, DMA_CR_UNSUPPORTED_OPCODE_ERR}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}},
+		{{false, DMA_CR_SUCCESS}, {true, DMA_CR_LOC_LEN_ERR},
+		 {true, DMA_CR_LOC_ACCESS_ERR}, {true, DMA_CR_REM_RESP_LEN_ERR},
+		 {true, DMA_CR_LOC_DATA_POISON}},
+		{{false, DMA_CR_SUCCESS}, {true, DMA_CR_REM_UNSUPPORTED_REQ_ERR},
+		 {true, DMA_CR_REM_ACCESS_ABORT_ERR}, {false, DMA_CR_SUCCESS},
+		 {true, DMA_CR_REM_DATA_POISON}},
+		{{true, DMA_CR_RNR_RETRY_CNT_EXC_ERR}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}},
+		{{true, DMA_CR_ACK_TIMEOUT_ERR}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}},
+		{{true, DMA_CR_WR_FLUSH_ERR}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}, {false, DMA_CR_SUCCESS},
+		 {false, DMA_CR_SUCCESS}}
+	};
+
+	if ((src_status < CDMA_CQE_STATUS_NUM) && (substatus < CDMA_CQE_SUB_STATUS_NUM) &&
+		map[src_status][substatus].is_valid) {
+		*cr_status = map[src_status][substatus].cr_status;
+		return JFC_OK;
+	}
+
+	CDMA_LOG_ERR("cqe_status (%u) substatus (%u) is invalid.", src_status,
+				 substatus);
+
+	return JFC_POLL_ERR;
+}
+
+static enum jfc_poll_state cdma_u_update_flush_cr(struct cdma_u_jetty_queue *queue,
+						  struct cdma_u_jfc_cqe *cqe,
+						  struct dma_cr *cr)
+{
+	uint8_t flush_done;
+
+	if (cdma_get_cr_status(cqe->status, cqe->substatus, &cr->status))
+		return JFC_POLL_ERR;
+
+	flush_done = cqe->fd;
+	if (!!flush_done) {
+		cr->status = DMA_CR_WR_FLUSH_ERR_DONE;
+		queue->flush_flag = true;
+	} else {
+		queue->ci++;
+	}
+
+	return JFC_OK;
+}
+
+static enum jfc_poll_state cdma_parse_cqe_for_jfc(struct cdma_u_jfc_cqe *cqe,
+						  struct dma_cr *cr)
+{
+	struct cdma_u_jetty_queue *queue;
+
+	queue = cdma_u_update_jetty_idx(cqe);
+	if (!queue) {
+		CDMA_LOG_ERR("update jetty idx failed.");
+		return JFC_POLL_ERR;
+	}
+
+	cr->flag.bs.s_r = cqe->s_r;
+	cr->flag.bs.jetty = cqe->is_jetty;
+	cr->completion_len = cqe->byte_cnt;
+	cr->tpn = cqe->tpn;
+	cr->local_id = (cqe->local_num_h << CDMA_SRC_IDX_SHIFT) | cqe->local_num_l;
+	cr->remote_id = cqe->rmt_idx;
+	cr->user_ctx = queue->wrid[queue->ci & queue->baseblk_mask];
+
+	if (cqe->status) {
+		CDMA_LOG_WARN("get sq %u cqe status abnormal, ci = %u, pi = %u.\n",
+					  queue->idx, queue->ci, queue->pi);
+	}
+
+	if (cdma_u_update_flush_cr(queue, cqe, cr)) {
+		return JFC_POLL_ERR;
+	}
+
+	return JFC_OK;
+}
+
+static enum jfc_poll_state cdma_u_poll_one(struct cdma_u_jfc *cdma_jfc,
+					   struct dma_cr *cr)
+{
+	struct cdma_u_jfc_cqe *cqe;
+	enum dma_cr_status status;
+
+	cqe = cdma_u_get_next_cqe(cdma_jfc, cdma_jfc->cq.ci);
+	if (!cqe) {
+		return JFC_EMPTY;
+	}
+
+	++cdma_jfc->cq.ci;
+
+	cdma_from_device_barrier();
+
+	if (cdma_parse_cqe_for_jfc(cqe, cr)) {
+		return JFC_POLL_ERR;
+	}
+
+	status = cr->status;
+	if (status == DMA_CR_WR_FLUSH_ERR_DONE || status == DMA_CR_WR_SUSPEND_DONE) {
+		CDMA_LOG_INFO("poll cr flush/suspend done, jfc_id = %u, status = %u.\n",
+			       cdma_jfc->base.jfc_id, status);
+		return JFC_EMPTY;
+	}
+
+	return JFC_OK;
+}
+
+static int cdma_cmd_wait_jfc(int jfce_fd, uint32_t jfc_cnt, int time_out)
+{
+	struct cdma_cmd_jfce_wait_args arg = { 0 };
+	int ret;
+
+	arg.in.max_event_cnt = jfc_cnt;
+	arg.in.time_out = time_out;
+
+	ret = ioctl(jfce_fd, CDMA_CMD_WAIT_JFC, &arg);
+	if (ret) {
+		CDMA_LOG_ERR("wait jfc ioctl failed, ret = %d, errno = %d.\n", ret, errno);
+		return -EFAULT;
+	}
+
+	return (int)arg.out.event_cnt;
+}
+
+static inline void cdma_ack_comp_event(pthread_mutex_t *mutex,
+				       pthread_cond_t *cond,
+				       uint32_t *events_acked,
+				       uint32_t nevent)
+{
+	(void)pthread_mutex_lock(mutex);
+	*events_acked = *events_acked + nevent;
+	(void)pthread_cond_signal(cond);
+	(void)pthread_mutex_unlock(mutex);
+}
+
 dma_jfce_t *cdma_u_create_jfce(struct dma_context *ctx)
 {
 	dma_jfce_t *jfce;
@@ -342,4 +513,86 @@ void cdma_u_clean_jfc(dma_jfc_t *jfc, uint32_t jetty_id)
 	}
 
 	(void)pthread_spin_unlock(&cq->lock);
+}
+
+int cdma_u_poll_jfc(dma_jfc_t *jfc, uint32_t cr_cnt, struct dma_cr *cr)
+{
+	enum jfc_poll_state ret = JFC_OK;
+	struct cdma_u_jfc *cdma_jfc;
+	uint32_t npolled;
+
+	if (jfc == NULL) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return -EINVAL;
+	}
+
+	cdma_jfc = to_cdma_u_jfc(jfc);
+	(void)pthread_spin_lock(&cdma_jfc->cq.lock);
+
+	for (npolled = 0; npolled < cr_cnt; ++npolled) {
+		ret = cdma_u_poll_one(cdma_jfc, cr + npolled);
+		if (ret != JFC_OK) {
+			break;
+		}
+	}
+
+	if (npolled) {
+		*cdma_jfc->sw_db = cdma_jfc->cq.ci & CDMA_JFC_DB_CI_IDX_M;
+	}
+
+	(void)pthread_spin_unlock(&cdma_jfc->cq.lock);
+
+	return ret == JFC_POLL_ERR ? -CDMA_INTER_ERR : (int)npolled;
+}
+
+int cdma_u_wait_jfc(dma_jfce_t *jfce, uint32_t jfc_cnt, int time_out)
+{
+	if (jfce == NULL || jfce->fd < 0 || jfc_cnt == 0) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return -1;
+	}
+
+	return cdma_cmd_wait_jfc(jfce->fd, jfc_cnt, time_out);
+}
+
+void cdma_u_ack_jfc(dma_jfc_t *jfc, uint32_t events)
+{
+	struct cdma_u_jfc *cdma_jfc;
+
+	if (!jfc) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return;
+	}
+
+	cdma_jfc = to_cdma_u_jfc(jfc);
+
+	cdma_jfc->arm_sn++;
+	cdma_ack_comp_event(&jfc->event_mutex, &jfc->event_cond,
+			    &jfc->comp_events_acked, events);
+}
+
+dma_status cdma_u_rearm_jfc(dma_jfc_t *jfc, bool solicited_only)
+{
+	struct cdma_u_context *cdma_ctx;
+	struct cdma_u_jfc *cdma_jfc;
+	struct cdma_jfc_db db;
+
+	if (jfc == NULL || jfc->dma_ctx == NULL) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return DMA_STATUS_INVAL;
+	}
+
+	cdma_jfc = to_cdma_u_jfc(jfc);
+	cdma_ctx = to_cdma_u_ctx(jfc->dma_ctx);
+
+	db.ci = cdma_jfc->cq.ci & CDMA_JFC_DB_CI_IDX_M;
+	db.notify = solicited_only;
+	db.arm_sn = cdma_jfc->arm_sn;
+	db.type = CDMA_CQ_ARM_DB;
+	db.jfcn = cdma_jfc->cq.idx;
+
+	cdma_u_write64((uint64_t *)(cdma_ctx->db.addr + CDMA_JFC_HW_DB_OFFSET),
+				   (uint64_t *)&db);
+
+	return DMA_STATUS_OK;
 }

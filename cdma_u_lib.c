@@ -16,7 +16,8 @@
 #include "cdma_u_context.h"
 #include "cdma_u_log.h"
 #include "cdma_u_lib.h"
-#include "cdma_cmd.h"
+#include "cdma_u_cmd.h"
+#include "cdma_u_event.h"
 #include "cdma_u_queue.h"
 #include "cdma_u_common.h"
 #include "cdma_u_segment.h"
@@ -200,4 +201,34 @@ dma_status dma_write_with_notify(struct dma_queue *queue,
 	}
 
 	return cdma_write(queue, rmt_seg, local_seg, notify_seg, notify_data);
+}
+
+int dma_poll_queue(struct dma_queue *queue, uint32_t cr_cnt, struct dma_cr *cr)
+{
+	if (!queue || cr_cnt == 0 || !cr) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return -EINVAL;
+	}
+
+	return cdma_poll_queue(queue, cr_cnt, cr);
+}
+
+int dma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
+				   struct dma_cr *cr)
+{
+	if (!queue || !queue->cfg.event_mode || cr_cnt == 0 || !cr) {
+		CDMA_LOG_ERR("invalid parameter.\n");
+		return -EINVAL;
+	}
+
+	return cdma_wait_queue(queue, cr_cnt, timeout, cr);
+}
+
+int dma_wait_ae(struct dma_context *ctx, struct dma_aeqe *aeqe)
+{
+	if (!ctx || !aeqe) {
+		return -EINVAL;
+	}
+
+	return cdma_wait_ae(ctx, aeqe);
 }

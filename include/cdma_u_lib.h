@@ -90,11 +90,24 @@ struct dma_context {
 	int async_fd;
 };
 
+struct dma_aeqe {
+	struct dma_context *ctx;
+	uint32_t queue_id;
+	uint32_t event_type;
+	int duration;
+};
+
 typedef enum {
 	DMA_STATUS_OK,
 	DMA_STATUS_INVAL,
 } dma_status;
 
+typedef enum{
+	DMA_AEQE_TYPE_JFC,
+	DMA_AEQE_TYPE_JFS,
+	DMA_AEQE_TYPE_INVALID,
+	DMA_AEQE_TYPE_UNKNOWN,
+} dma_aeqe_type;
 
 /**
  * dma_get_device_list - Get DMA device list
@@ -235,5 +248,33 @@ dma_status dma_write_with_notify(struct dma_queue *queue,
 				 struct dma_seg *local_seg,
 				 struct dma_seg *notify_seg,
 				 uint64_t notify_data);
+
+/**
+ * dma_poll_queue - DMA polling queue
+ * @queue: DMA queue pointer;
+ * @cr_cnt: number of completion record;
+ * @cr: completion record pointer;
+ * Return: polling operation results  >0 on success, others on failed
+ */
+int dma_poll_queue(struct dma_queue *queue, uint32_t cr_cnt, struct dma_cr *cr);
+
+/**
+ * dma_wait_queue - Wait for completion event
+ * @queue: DMA queue pointer;
+ * @cr_cnt: number of completion record;
+ * @timeout: timeout time for waiting ;
+ * @cr: completion record pointer;
+ * Return: operation result, >0 on success, others on failed
+ */
+int dma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
+		   struct dma_cr *cr);
+
+/**
+ * dma_wait_ae - Wait for asynchronous events
+ * @ctx: DMA context pointer;
+ * @aeqe: asynchronous event queue entity pointer;
+ * Return: operation result, 0 on 0 event success, 1 on 1 event success, others on failed
+ */
+int dma_wait_ae(struct dma_context *ctx, struct dma_aeqe *aeqe);
 
 #endif
