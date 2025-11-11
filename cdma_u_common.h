@@ -105,7 +105,7 @@ struct cdma_u_jetty_queue {
 	uint32_t max_sge_num;
 	bool flush_flag;
 	bool lock_free;
-	uint8_t cstm; /* sq ctrl flag */
+	uint32_t cstm; /* sq ctrl flag */
 };
 
 struct cdma_u_buf {

@@ -351,11 +351,13 @@ int cdma_u_cmd_create_jfs(struct dma_context *ctx, struct dma_jfs *jfs,
 	arg.in.tpn = cfg->tpn;
 	arg.in.dma_jfs = (uint64_t)jfs;
 	arg.in.eid_idx = cfg->eid_idx;
+	arg.in.trans_mode = cfg->trans_mode;
 	cdma_cmd_set_udrv_priv(&arg.udata, udata);
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl execute create jfs failed, ret = %d, cmd = %u.\n", ret, hdr.command);
+		CDMA_LOG_ERR("ioctl execute create jfs failed, ret = %d, cmd = %u.\n",
+			     ret, hdr.command);
 		return -ret;
 	}
 
@@ -385,9 +387,11 @@ int cdma_u_cmd_delete_jfs(struct dma_jfs *jfs)
 
 	ret = ioctl(jfs->dma_ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl execute delete jfs failed, ret = %d, cmd = %u.\n", ret, hdr.command);
+		CDMA_LOG_ERR("ioctl execute delete jfs failed, ret = %d, cmd = %u.\n",
+			     ret, hdr.command);
 		return -EFAULT;
 	}
 
 	return 0;
 }
+

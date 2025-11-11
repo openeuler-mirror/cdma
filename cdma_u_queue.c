@@ -32,6 +32,7 @@ static int cdma_u_cmd_create_queue(struct dma_context *ctx,
 	arg.in.priority = cfg->priority;
 	arg.in.rmt_eid = cfg->rmt_eid.dw0;
 	arg.in.user_ctx = cfg->user_ctx;
+	arg.in.trans_mode = cfg->trans_mode;
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret) {
@@ -64,9 +65,8 @@ static int cdma_u_cmd_delete_queue(struct cdma_u_queue *cdma_queue)
 	arg.in.handle = cdma_queue->handle;
 
 	ret = ioctl(queue->ctx->dma_dev->fd, CDMA_SYNC, &hdr);
-	if (ret) {
+	if (ret)
 		CDMA_LOG_ERR("ioctl failed, ret = %d, cmd = %u.\n", ret, hdr.command);
-	}
 
 	return ret;
 }
@@ -85,6 +85,7 @@ static void cdma_assemble_jfs_cfg(struct dma_jfs_cfg *jfs_cfg,
 	jfs_cfg->priority = cfg->priority;
 	jfs_cfg->queue_id = queue_id;
 	jfs_cfg->rmt_eid = cfg->rmt_eid.dw0;
+	jfs_cfg->trans_mode = cfg->trans_mode;
 }
 
 static void cdma_assemble_tp_cfg(struct dma_tp_cfg *tp_cfg,

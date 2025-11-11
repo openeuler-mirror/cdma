@@ -121,8 +121,8 @@ static int cdma_cmd_create_jfc(struct dma_context *ctx, struct cdma_u_jfc *jfc,
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl in create jfc failed, ret = %d, errno = %d,"
-					 " cmd = %u.\n", ret, errno, hdr.command);
+		CDMA_LOG_ERR("ioctl in create jfc failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -151,8 +151,8 @@ static int cdma_cmd_delete_jfc(struct dma_jfc *jfc)
 
 	ret = ioctl(jfc->dma_ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl in cdma_delete_jfc failed, ret = %d, errno = %d,"
-					 " cmd = %u.\n", ret, errno, hdr.command);
+		CDMA_LOG_ERR("ioctl in cdma_delete_jfc failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -177,9 +177,8 @@ static struct cdma_u_jfc_cqe *cdma_u_get_next_cqe(struct cdma_u_jfc *jfc,
 	cqe = (struct cdma_u_jfc_cqe *)cdma_u_get_buf_entry(&jfc->cq, n);
 	valid_owner = (jfc->cq.ci >> align_power2(jfc->cq.baseblk_cnt)) &
 		       CDMA_JFC_DB_VALID_OWNER_M;
-	if (!(cqe->owner ^ valid_owner)) {
+	if (!(cqe->owner ^ valid_owner))
 		return NULL;
-	}
 
 	return cqe;
 }
@@ -190,13 +189,11 @@ static struct cdma_u_jetty_queue *cdma_u_update_jetty_idx(struct cdma_u_jfc_cqe 
 
 	queue = (struct cdma_u_jetty_queue *)((uint64_t)cqe->user_data[1] <<
 			CDMA_ADDR_SHIFT | cqe->user_data[0]);
-	if (!queue) {
+	if (!queue)
 		return NULL;
-	}
 
-	if (!!cqe->fd) {
+	if (!!cqe->fd)
 		return queue;
-	}
 
 	queue->ci += (cqe->entry_idx - queue->ci) & queue->baseblk_mask;
 
@@ -291,9 +288,8 @@ static enum jfc_poll_state cdma_parse_cqe_for_jfc(struct cdma_u_jfc_cqe *cqe,
 					  queue->idx, queue->ci, queue->pi);
 	}
 
-	if (cdma_u_update_flush_cr(queue, cqe, cr)) {
+	if (cdma_u_update_flush_cr(queue, cqe, cr))
 		return JFC_POLL_ERR;
-	}
 
 	return JFC_OK;
 }
@@ -305,17 +301,15 @@ static enum jfc_poll_state cdma_u_poll_one(struct cdma_u_jfc *cdma_jfc,
 	enum dma_cr_status status;
 
 	cqe = cdma_u_get_next_cqe(cdma_jfc, cdma_jfc->cq.ci);
-	if (!cqe) {
+	if (!cqe)
 		return JFC_EMPTY;
-	}
 
 	++cdma_jfc->cq.ci;
 
 	cdma_from_device_barrier();
 
-	if (cdma_parse_cqe_for_jfc(cqe, cr)) {
+	if (cdma_parse_cqe_for_jfc(cqe, cr))
 		return JFC_POLL_ERR;
-	}
 
 	status = cr->status;
 	if (status == DMA_CR_WR_FLUSH_ERR_DONE || status == DMA_CR_WR_SUSPEND_DONE) {
@@ -397,9 +391,8 @@ dma_jfc_t *cdma_u_create_jfc(struct dma_context *ctx, dma_jfc_cfg_t *cfg)
 	int ret;
 
 	ret = cdma_u_check_jfc_cfg(ctx, cfg);
-	if (ret) {
+	if (ret)
 		return NULL;
-	}
 
 	cdma_ctx = to_cdma_u_ctx(ctx);
 
@@ -486,9 +479,8 @@ void cdma_u_clean_jfc(dma_jfc_t *jfc, uint32_t jetty_id)
 	(void)pthread_spin_lock(&cq->lock);
 
 	for (pi = cq->ci; cdma_u_get_next_cqe(cdma_jfc, pi) != NULL; ++pi) {
-		if (pi > cq->ci + cq->baseblk_cnt) {
+		if (pi > cq->ci + cq->baseblk_cnt)
 			break;
-		}
 	}
 
 	while (((int) --pi - (int)cq->ci) >= 0) {
@@ -531,14 +523,12 @@ int cdma_u_poll_jfc(dma_jfc_t *jfc, uint32_t cr_cnt, struct dma_cr *cr)
 
 	for (npolled = 0; npolled < cr_cnt; ++npolled) {
 		ret = cdma_u_poll_one(cdma_jfc, cr + npolled);
-		if (ret != JFC_OK) {
+		if (ret != JFC_OK)
 			break;
-		}
 	}
 
-	if (npolled) {
+	if (npolled)
 		*cdma_jfc->sw_db = cdma_jfc->cq.ci & CDMA_JFC_DB_CI_IDX_M;
-	}
 
 	(void)pthread_spin_unlock(&cdma_jfc->cq.lock);
 

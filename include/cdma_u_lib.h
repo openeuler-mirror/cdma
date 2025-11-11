@@ -59,6 +59,7 @@ struct queue_cfg {
 	uint32_t dcna;
 	struct dev_eid rmt_eid;
 	bool event_mode; /* false: poll mode, true: interrupt mode. */
+	uint32_t trans_mode;
 };
 
 struct dma_queue {

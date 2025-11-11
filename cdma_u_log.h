@@ -32,7 +32,7 @@ struct cdma_log_level_st {
 bool cdma_log_drop(enum cdma_log_level level);
 void cdma_getenv_log_level(void);
 void cdma_log(const char *function, int line, enum cdma_log_level level,
-              const char *format, ...) __attribute__((format(printf, 4, 5)));
+	      const char *format, ...) __attribute__((format(printf, 4, 5)));
 enum cdma_log_level cdma_log_get_level(const char *level_string);
 
 #define CDMA_LOG(l, ...) \

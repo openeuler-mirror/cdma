@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include "cdma_u_lib.h"
+#include "cdma_u_log.h"
 #include "cdma_u_device.h"
 
 static int cdma_open_cdev(char *path)
@@ -27,25 +28,25 @@ static int cdma_open_cdev(char *path)
 
 	real_path = realpath(path, NULL);
 	if (real_path == NULL) {
-		printf("cdma get realpath from %s failed.\n", path);
+		CDMA_LOG_ERR("cdma get realpath from %s failed.\n", path);
 		return -EIO;
 	}
 
 	if (strlen(real_path) <= len) {
-		printf("cdma real path is too short.\n");
+		CDMA_LOG_ERR("cdma real path is too short.\n");
 		free(real_path);
 		return -EIO;
 	}
 
 	if (strncmp(real_path, CDMA_CDEV_PATH, len) != 0) {
-		printf("cdma real path do not have the same prefix.\n");
+		CDMA_LOG_ERR("cdma real path do not have the same prefix.\n");
 		free(real_path);
 		return -EIO;
 	}
 
 	fd = open(real_path, O_RDWR);
 	if (fd < 0)
-		printf("cdma open %s failed, errno = %d.\n", real_path, errno);
+		CDMA_LOG_ERR("cdma open %s failed, errno = %d.\n", real_path, errno);
 
 	free(real_path);
 	return fd;
@@ -59,19 +60,20 @@ static uint32_t cdma_get_devs_num(void)
 
 	cdev_dir = opendir(CDMA_CDEV_PATH);
 	if (cdev_dir == NULL) {
-		printf("cdma open dir %s failed, errno = %d.\n", CDMA_CDEV_PATH, errno);
+		CDMA_LOG_ERR("cdma open dir %s failed, errno = %d.\n", CDMA_CDEV_PATH,
+			     errno);
 		return 0;
 	}
 
 	while ((dent = readdir(cdev_dir)) != NULL) {
 		if (dent->d_name[0] == '.')
 			continue;
-		printf("cdma get cdev: %s\n", dent->d_name);
+		CDMA_LOG_INFO("cdma get cdev: %s\n", dent->d_name);
 		num_devices++;
 	}
 
 	if (closedir(cdev_dir) < 0)
-		printf("failed to close dir: %s\n", CDMA_CDEV_PATH);
+		CDMA_LOG_ERR("failed to close dir: %s\n", CDMA_CDEV_PATH);
 
 	return num_devices;
 }
@@ -133,14 +135,14 @@ static int cdma_query_device_info(struct dma_device *dev)
 
 	ret = ioctl(dev->fd, CDMA_SYNC, &hdr);
 	if (ret) {
-		printf("cdma query device info failed, ret = %d, errno = %d.\n", ret,
-			errno);
+		CDMA_LOG_ERR("cdma query device info failed, ret = %d, errno = %d.\n",
+			     ret, errno);
 		return ret;
 	}
 
 	eu_num = info.out.attr.eu_num;
 	if (eu_num == 0 || eu_num > CDMA_MAX_EU_NUM) {
-		printf("cdma eu num %u is invalid.\n", eu_num);
+		CDMA_LOG_ERR("cdma eu num %u is invalid.\n", eu_num);
 		return -EINVAL;
 	}
 
@@ -151,9 +153,10 @@ static int cdma_query_device_info(struct dma_device *dev)
 	dev->attr.dev_cap = info.out.attr.dev_cap;
 
 	for (i = 0; i < eu_num; i++) {
-	printf("cdma query eus[%d], upi = 0x%x, eid = 0x%x, eid_idx = 0x%x.\n",
-		i, dev->attr.eus[i].upi, dev->attr.eus[i].eid.dw0,
-		dev->attr.eus[i].eid_idx);
+		CDMA_LOG_INFO(
+			"cdma query eus[%d], upi = 0x%x, eid = 0x%x, eid_idx = 0x%x.\n", i,
+			dev->attr.eus[i].upi, dev->attr.eus[i].eid.dw0,
+			dev->attr.eus[i].eid_idx);
 	}
 
 	return 0;
@@ -170,19 +173,20 @@ struct dma_device *cdma_get_device_list(uint32_t *num_devices)
 
 	*num_devices = cdma_get_devs_num();
 	if (*num_devices == 0) {
-		printf("cdma device num is 0.\n");
+		CDMA_LOG_ERR("cdma device num is 0.\n");
 		return NULL;
 	}
 
 	cdev_dir = opendir(CDMA_CDEV_PATH);
 	if (cdev_dir == NULL) {
-		printf("cdma open dir %s failed, errno = %d.\n", CDMA_CDEV_PATH, errno);
+		CDMA_LOG_ERR("cdma open dir %s failed, errno = %d.\n", CDMA_CDEV_PATH,
+			     errno);
 		return NULL;
 	}
 
 	dev_list = (struct dma_device *)calloc(*num_devices, sizeof(*dev_list));
 	if (dev_list == NULL) {
-		printf("alloc dev_list failed.\n");
+		CDMA_LOG_ERR("alloc dev_list failed.\n");
 		goto out;
 	}
 
@@ -196,8 +200,8 @@ struct dma_device *cdma_get_device_list(uint32_t *num_devices)
 			continue;
 
 		(void)strncpy(dev_list[i].name, dent->d_name, CDMA_MAX_DEV_NAME_LEN - 1);
-		cdma_query_device_info(&dev_list[i]);
-		if (ret != 0) {
+		ret = cdma_query_device_info(&dev_list[i]);
+		if (ret) {
 			close(dev_list[i].fd);
 			dev_list[i].fd = -1;
 			continue;
@@ -208,14 +212,14 @@ struct dma_device *cdma_get_device_list(uint32_t *num_devices)
 	}
 
 	if (i != *num_devices) {
-		printf("cdma check device list error, %u != %u.\n", i, *num_devices);
-		cdma_free_device_list(dev_list, *num_devices);
-		dev_list = NULL;
+		CDMA_LOG_WARN("%u cdma devices are online, but %u devices are ready.\n",
+			      *num_devices, i);
+		*num_devices = i;
 	}
 
 out:
 	if (closedir(cdev_dir) < 0)
-		printf("close dir %s\n failed", CDMA_CDEV_PATH);
+		CDMA_LOG_ERR("close dir %s\n failed", CDMA_CDEV_PATH);
 
 	return dev_list;
 }
