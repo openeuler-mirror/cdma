@@ -29,19 +29,24 @@ union dma_jfs_flag {
 typedef union dma_jfs_wr_flag {
 	struct {
 		uint32_t place_order : 2;	/* 0: There is no order with other WR
-						   1: relax order
-						   2: strong order
-						   3: reserve */ /* see cdma_order_type_t */
+						 * 1: relax order
+						 * 2: strong order
+						 * 3: reserve */ /* see cdma_order_type_t */
 		uint32_t comp_order : 1;	/* 0: There is no completion order with othwe WR.
-						   1: Completion order with previous WR. */
+						 * 1: Completion order with previous WR. 
+						 */
 		uint32_t fence : 1;		/* 0: There is not fence.
-						   1: Fence with previous read and atomic WR */
+						 * 1: Fence with previous read and atomic WR 
+						 */
 		uint32_t solicited_enable : 1;	/* 0: There is not solicited.
-						   1: solicited. It will trigger an event on remote side */
+						 * 1: solicited. It will trigger an event on remote side 
+						 */
 		uint32_t complete_enable : 1;	/* 0: Do not notify local process after the task is complete.
-						   1: Notify local process after the task is completed. */
+						 * 1: Notify local process after the task is completed. 
+						 */
 		uint32_t inline_flag : 1;	/* 0: not inline.
-						   1: inline data. */
+						 * 1: inline data. 
+						 */
 		uint32_t reserved : 25;
 	} bs;
 	uint32_t value;
@@ -179,6 +184,7 @@ typedef struct dma_jfs_cfg {
 	uint32_t pld_token_id;
 	uint32_t tpn;
 	uint32_t eid_idx;
+	uint32_t trans_mode;
 } dma_jfs_cfg_t;
 
 typedef struct dma_jfs {
