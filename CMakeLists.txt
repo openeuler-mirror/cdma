@@ -34,5 +34,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wuninitialized -Wno-error=format -Wun
         -Wreturn-local-addr -Wredundant-decls -Wfloat-conversion -Wmissing-prototypes -Wstrict-prototypes")
 
 install(TARGETS cdma_so LIBRARY DESTINATION lib64 OPTIONAL)
-install(FILES include/cdma_u_lib.h
-	DESTINATION include/)
+install(FILES include/cdma_u_lib.h DESTINATION include/)
+install(FILES kernel_headers/cdma_abi.h DESTINATION include/)
+
