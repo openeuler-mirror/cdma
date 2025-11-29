@@ -33,12 +33,11 @@ struct dma_device *dma_get_device_list(uint32_t *num_devices)
 void dma_free_device_list(struct dma_device *dev_list, uint32_t num_devices)
 {
 	/*
-	* num_devices can be 0, it means that no device has been obtained,
-	* but the dev_list memory should be free any way
-	*/
-	if (!dev_list) {
+	 * num_devices can be 0, it means that no device has been obtained,
+	 * but the dev_list memory should be free any way
+	 */
+	if (!dev_list)
 		return;
-	}
 
 	cdma_free_device_list(dev_list, num_devices);
 }
@@ -55,9 +54,8 @@ struct dma_context *dma_create_context(struct dma_device *dma_dev)
 {
 	struct dma_context *ctx;
 
-	if (!dma_dev) {
+	if (!dma_dev)
 		return NULL;
-	}
 
 	ctx = cdma_create_context(dma_dev);
 	if (!ctx) {
@@ -70,9 +68,8 @@ struct dma_context *dma_create_context(struct dma_device *dma_dev)
 
 void dma_delete_context(struct dma_context *ctx)
 {
-	if (!ctx) {
+	if (!ctx)
 		return;
-	}
 
 	cdma_delete_context(ctx);
 }
@@ -97,9 +94,8 @@ struct dma_queue *dma_alloc_queue(struct dma_context *ctx, struct queue_cfg *cfg
 
 void dma_free_queue(struct dma_queue *queue)
 {
-	if (!queue) {
+	if (!queue)
 		return;
-	}
 
 	cdma_free_queue(queue);
 }
@@ -125,9 +121,8 @@ struct dma_seg *dma_register_seg(struct dma_context *ctx,
 
 void dma_unregister_seg(struct dma_context *ctx, struct dma_seg *seg)
 {
-	if (!ctx || !seg) {
+	if (!ctx || !seg)
 		return;
-	}
 
 	cdma_unregister_seg(ctx, seg);
 }
@@ -143,9 +138,8 @@ struct dma_seg *dma_import_seg(struct dma_seg_cfg *cfg)
 
 void dma_unimport_seg(struct dma_seg *seg)
 {
-	if (!seg) {
+	if (!seg)
 		return;
-	}
 
 	cdma_unimport_seg(seg);
 }
@@ -153,9 +147,8 @@ void dma_unimport_seg(struct dma_seg *seg)
 dma_status dma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
 		     struct dma_seg *local_seg)
 {
-	if (!queue || !rmt_seg || !local_seg) {
+	if (!queue || !rmt_seg || !local_seg)
 		return DMA_STATUS_INVAL;
-	}
 
 	return cdma_write(queue, rmt_seg, local_seg, NULL, 0);
 }
@@ -163,9 +156,8 @@ dma_status dma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
 dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 		    struct dma_seg *local_seg)
 {
-	if (!queue || !rmt_seg || !local_seg) {
+	if (!queue || !rmt_seg || !local_seg)
 		return DMA_STATUS_INVAL;
-	}
 
 	return cdma_read(queue, rmt_seg, local_seg);
 }
@@ -173,9 +165,8 @@ dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 dma_status dma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
 				   struct dma_seg *local_seg, uint64_t cmp, uint64_t swap)
 {
-	if (!queue || !rmt_seg || !local_seg) {
+	if (!queue || !rmt_seg || !local_seg)
 		return DMA_STATUS_INVAL;
-	}
 
 	return cdma_cas(queue, rmt_seg, local_seg, cmp, swap);
 }
@@ -183,9 +174,8 @@ dma_status dma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
 dma_status dma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
 		   struct dma_seg *local_seg, uint64_t add)
 {
-	if (!queue || !rmt_seg || !local_seg) {
+	if (!queue || !rmt_seg || !local_seg)
 		return DMA_STATUS_INVAL;
-	}
 
 	return cdma_faa(queue, rmt_seg, local_seg, add);
 }
@@ -196,16 +186,15 @@ dma_status dma_write_with_notify(struct dma_queue *queue,
 				 struct dma_seg *notify_seg,
 				 uint64_t notify_data)
 {
-	if (!queue || !rmt_seg || !local_seg || !notify_seg) {
+	if (!queue || !rmt_seg || !local_seg || !notify_seg)
 		return DMA_STATUS_INVAL;
-	}
 
 	return cdma_write(queue, rmt_seg, local_seg, notify_seg, notify_data);
 }
 
 int dma_poll_queue(struct dma_queue *queue, uint32_t cr_cnt, struct dma_cr *cr)
 {
-	if (!queue || cr_cnt == 0 || !cr) {
+	if (!queue || !cr_cnt || !cr) {
 		CDMA_LOG_ERR("invalid parameter.\n");
 		return -EINVAL;
 	}
@@ -216,7 +205,7 @@ int dma_poll_queue(struct dma_queue *queue, uint32_t cr_cnt, struct dma_cr *cr)
 int dma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
 				   struct dma_cr *cr)
 {
-	if (!queue || !queue->cfg.event_mode || cr_cnt == 0 || !cr) {
+	if (!queue || !queue->cfg.event_mode || !cr_cnt || !cr) {
 		CDMA_LOG_ERR("invalid parameter.\n");
 		return -EINVAL;
 	}
@@ -226,9 +215,8 @@ int dma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
 
 int dma_wait_ae(struct dma_context *ctx, struct dma_aeqe *aeqe)
 {
-	if (!ctx || !aeqe) {
+	if (!ctx || !aeqe)
 		return -EINVAL;
-	}
 
 	return cdma_wait_ae(ctx, aeqe);
 }

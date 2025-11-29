@@ -89,9 +89,8 @@ struct dma_seg *cdma_register_seg(struct dma_context *ctx,
 	}
 
 	ret = cdma_register_kernel_seg(ctx, cfg, seg);
-	if (ret) {
+	if (ret)
 		goto ungrant;
-	}
 
 	return seg;
 
@@ -118,8 +117,8 @@ static void cdma_unregister_kernel_seg(struct dma_context *ctx,
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret) {
-	CDMA_LOG_ERR("cdma unregister seg failed, ret = %d, errno = %d.\n", ret,
-		     errno);
+		CDMA_LOG_ERR("cdma unregister seg failed, ret = %d, errno = %d.\n", ret,
+		    	     errno);
 	}
 }
 
@@ -130,9 +129,8 @@ void cdma_unregister_seg(struct dma_context *ctx, struct dma_seg *seg)
 	cdma_unregister_kernel_seg(ctx, seg);
 
 	ret = ummu_ungrant(seg->tid, (void *)seg->sva, seg->len);
-	if (ret) {
+	if (ret)
 		CDMA_LOG_ERR("cdma ungrant seg failed, ret = %d.\n", ret);
-	}
 
 	free(seg);
 }

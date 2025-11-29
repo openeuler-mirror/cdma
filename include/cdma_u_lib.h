@@ -21,6 +21,8 @@ struct dma_device {
 	char name[CDMA_MAX_DEV_NAME_LEN];
 	int fd;
 	struct cdma_device_attr attr;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 typedef enum {
@@ -50,6 +52,8 @@ struct dma_cr {
 	uint32_t		local_id;
 	uint32_t		remote_id;
 	uint32_t		tpn;
+	uint32_t		rsv_bitmap;
+	uint32_t		rsvd[4];
 };
 
 struct queue_cfg {
@@ -59,12 +63,17 @@ struct queue_cfg {
 	uint32_t dcna;
 	struct dev_eid rmt_eid;
 	bool event_mode; /* false: poll mode, true: interrupt mode. */
+	uint32_t trans_mode;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 struct dma_queue {
 	struct dma_context *ctx;
 	struct queue_cfg cfg;
 	uint32_t queue_id;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 struct dma_seg {
@@ -74,6 +83,8 @@ struct dma_seg {
 	uint32_t tid; /* data valid only in bit 0-19 */
 	uint32_t token_value;
 	bool token_value_valid;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 struct dma_seg_cfg {
@@ -82,12 +93,16 @@ struct dma_seg_cfg {
 	uint32_t token_value;
 	uint32_t tid; /* used by import segment, data valid only in bit 0-19*/
 	bool token_value_valid;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 struct dma_context {
 	struct dma_device *dma_dev;
 	uint32_t tid;
 	int async_fd;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 struct dma_aeqe {
@@ -95,6 +110,8 @@ struct dma_aeqe {
 	uint32_t queue_id;
 	uint32_t event_type;
 	int duration;
+	uint32_t rsv_bitmap;
+	uint32_t rsvd[4];
 };
 
 typedef enum {
@@ -216,8 +233,8 @@ dma_status dma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
  * @queue: DMA queue pointer;
  * @rmt_seg: the remote segment pointer;
  * @local_seg: the local segment pointer;
- * @cmp: data address used for comparison;
- * @swap: data address used for swap;
+ * @cmp: compare data, length <= 8B: CMP value, length > 8B: data address;
+ * @swap: swap data, length <= 8B: swap value, length > 8B: data address;
  * Return: operation result, DMA_STATUS_OK on success
  */
 dma_status dma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
@@ -240,7 +257,7 @@ dma_status dma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
  * @rmt_seg: the remote segment pointer;
  * @local_seg: the local segment pointer;
  * @notify_seg: the segment pointer for notify;
- * @notify_data: data address used for notify;
+ * @notify_data: data value used for notify;
  * Return: operation result, DMA_STATUS_OK on success
  */
 dma_status dma_write_with_notify(struct dma_queue *queue,
