@@ -41,18 +41,18 @@ static int cdma_cmd_get_async_event(struct cdma_u_context *u_ctx,
 		}
 
 		switch (ret_aeqe.event_type) {
-			case DMA_AEQE_TYPE_JFS:
-				arg->queue_id = ret_aeqe.event_data;
-				break;
-			case DMA_AEQE_TYPE_JFC:
-				arg->queue_id = ret_aeqe.event_data;
-				break;
-			case DMA_AEQE_TYPE_INVALID:
-				arg->queue_id = 0;
-				break;
-			default:
-				CDMA_LOG_ERR("invalid ae event type.\n");
-				return -EFAULT;
+		case DMA_AEQE_TYPE_JFS:
+			arg->queue_id = ret_aeqe.event_data;
+			break;
+		case DMA_AEQE_TYPE_JFC:
+			arg->queue_id = ret_aeqe.event_data;
+			break;
+		case DMA_AEQE_TYPE_INVALID:
+			arg->queue_id = 0;
+			break;
+		default:
+			CDMA_LOG_ERR("invalid ae event type.\n");
+			return -EFAULT;
 		}
 
 		CDMA_LOG_INFO("get async event successfully, ae type: %u.\n", ret_aeqe.event_type);
@@ -81,14 +81,17 @@ int cdma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
 	int poll_cnt;
 
 	wait_cnt = cdma_u_wait_jfc(cdma_queue->cdma_jfce, cr_cnt, timeout);
-	if (wait_cnt <= 0) {
-		CDMA_LOG_ERR("wait jfc failed.\n");
+	if (wait_cnt < 0) {
+		CDMA_LOG_ERR("wait jfc failed, ret = %d.\n", wait_cnt);
 		return -EFAULT;
 	}
 
-	poll_cnt = cdma_u_poll_jfc(cdma_queue->cdma_jfc, wait_cnt, cr);
+	if (wait_cnt == 0)
+		CDMA_LOG_WARN("wait jfc timeout.\n");
+
+	poll_cnt = cdma_u_poll_jfc(cdma_queue->cdma_jfc, cr_cnt, cr);
 	if (poll_cnt <= 0) {
-		CDMA_LOG_ERR("poll jfc failed.\n");
+		CDMA_LOG_ERR("poll jfc failed, ret = %d.\n", poll_cnt);
 		return -EFAULT;
 	}
 
@@ -107,10 +110,8 @@ int cdma_wait_ae(struct dma_context *ctx, struct dma_aeqe *arg)
 	int ret;
 
 	ret = cdma_cmd_get_async_event(u_ctx, arg);
-	if (ret) {
+	if (ret < 0)
 		CDMA_LOG_ERR("cmd get async event failed, ret = %d.\n", ret);
-		return -EFAULT;
-	}
 
-	return 0;
+	return ret;
 }

@@ -1,37 +1,38 @@
-# cdma
+# CDMA
+## Overview
+CDMA library provides CDMA (Crystal Direct Memory Access) functionality for
+user-space applications, enabling asynchronous memory read and write operations
+between hosts or between host and devices.
 
-#### 介绍
-An UB entity driver on user space, provide asynchronous read and write for remote memory.
+The key features are described as follows:
 
-#### 软件架构
-软件架构说明
+1. Peer-to-peer communication between hosts, enabling bidirectional asynchronous memory read or write.
+2. Asynchronous memory read and write between host and devices via DMA.
+3. Asynchronous memory read and write between devices and host via DMA.
 
+## Directory Structure
+    ├── cdma/
+    |   ├── doc/               // cdma api doc files
+    │   ├── include/           // cdma header files
+    │   ├── kernel_include/    // cdma abi files
+    └── ...                    // cdma function implementation files
 
-#### 安装教程
+## Header Files
+[cdma_u_lib.h](./include/cdma_u_lib.h)
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## Note
+Please refer to the CDMA library [API Doc](./doc/CDMA_API.md) for development.
 
-#### 使用说明
+## Support
+If there is any issue or question, please email the specific information related
+to the issue or question to <dev@openeuler.org> or vendor's support channel.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## License
+SPDX-License-Identifier: MIT
 
-#### 参与贡献
+## Copyright
+Copyright (c) 2025 HiSilicon Technologies Co., Ltd. All rights reserved.
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
