@@ -358,7 +358,7 @@ int cdma_u_cmd_create_jfs(struct dma_context *ctx, struct dma_jfs *jfs,
 	if (ret != 0) {
 		CDMA_LOG_ERR("ioctl execute create jfs failed, ret = %d, cmd = %u.\n",
 			     ret, hdr.command);
-		return -ret;
+		return ret;
 	}
 
 	cdma_fill_jfs(jfs, ctx, cfg, &arg);
@@ -389,7 +389,7 @@ int cdma_u_cmd_delete_jfs(struct dma_jfs *jfs)
 	if (ret != 0) {
 		CDMA_LOG_ERR("ioctl execute delete jfs failed, ret = %d, cmd = %u.\n",
 			     ret, hdr.command);
-		return -EFAULT;
+		return ret;
 	}
 
 	return 0;
