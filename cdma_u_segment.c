@@ -135,7 +135,6 @@ void cdma_unregister_seg(struct dma_context *ctx, struct dma_seg *seg)
 	free(seg);
 }
 
-
 struct dma_seg *cdma_import_seg(struct dma_seg_cfg *cfg)
 {
 	struct dma_seg *seg;
