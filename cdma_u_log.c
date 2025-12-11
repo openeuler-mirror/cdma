@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <syslog.h>
 #include "cdma_u_log.h"
+#include "cdma_u_lib.h"
 
 static struct cdma_log_level_st g_cdma_log_level = {
 	CDMA_VLOG_LEVEL_INFO,
@@ -116,6 +117,7 @@ void cdma_log(const char *function, int line, enum cdma_log_level level,
 static __attribute__((constructor)) void cdma_log_init(void)
 {
 	cdma_getenv_log_level();
+	CDMA_LOG_INFO("cdma version %s\n", CDMA_VERSION);
 }
 
 static __attribute__((destructor)) void cdma_log_uninit(void)
