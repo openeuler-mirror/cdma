@@ -16,4 +16,3 @@ struct dma_seg *cdma_import_seg(struct dma_seg_cfg *cfg);
 void cdma_unimport_seg(struct dma_seg *seg);
 
 #endif
-

@@ -31,7 +31,7 @@ static int cdma_cmd_get_async_event(struct cdma_u_context *u_ctx,
 
 	ret = poll(&fds, EVENT_EVENT_NUM, arg->duration);
 	if (ret <= 0) {
-		CDMA_LOG_WARN("poll wait event, ret=%d.\n", ret);
+		CDMA_LOG_DEBUG("poll wait event, ret=%d.\n", ret);
 		return ret;
 	} else if (fds.revents == POLLIN) {
 		ret = ioctl(u_ctx->async_fd, CDMA_CMD_GET_ASYNC_EVENT, &ret_aeqe);
