@@ -1,4 +1,3 @@
-# 通知: 本项目已经正式迁移至 [AtomGit](https://atomgit.com/openeuler/cdma) 平台
 # CDMA
 ## Overview
 CDMA library provides CDMA (Crystal Direct Memory Access) functionality for
