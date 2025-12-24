@@ -221,7 +221,8 @@ int cdma_cmd_create_jfce(struct dma_context *ctx, dma_jfce_t *jfce)
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl execute create jfce failed, ret = %d.\n", ret);
+		CDMA_LOG_ERR("ioctl execute create jfce failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -265,7 +266,7 @@ int cdma_cmd_create_ctp(struct dma_context *ctx, struct dma_tp *ctp,
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
 		CDMA_LOG_ERR("ioctl execute create ctp failed, ret = %d, errno = %d, cmd = %u.\n",
-			      ret, errno, hdr.command);
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -299,7 +300,7 @@ int cdma_cmd_delete_ctp(struct dma_tp *ctp)
 	ret = ioctl(ctp->dma_ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
 		CDMA_LOG_ERR("ioctl execute delete ctp failed, ret = %d, errno = %d, cmd = %u.\n",
-			      ret, errno, hdr.command);
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -356,8 +357,8 @@ int cdma_u_cmd_create_jfs(struct dma_context *ctx, struct dma_jfs *jfs,
 
 	ret = ioctl(ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl execute create jfs failed, ret = %d, cmd = %u.\n",
-			     ret, hdr.command);
+		CDMA_LOG_ERR("ioctl execute create jfs failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -387,8 +388,8 @@ int cdma_u_cmd_delete_jfs(struct dma_jfs *jfs)
 
 	ret = ioctl(jfs->dma_ctx->dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("ioctl execute delete jfs failed, ret = %d, cmd = %u.\n",
-			     ret, hdr.command);
+		CDMA_LOG_ERR("ioctl execute delete jfs failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 

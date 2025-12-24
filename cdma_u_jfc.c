@@ -345,7 +345,8 @@ static int cdma_cmd_wait_jfc(int jfce_fd, uint32_t jfc_cnt, int time_out)
 
 	ret = ioctl(jfce_fd, CDMA_CMD_WAIT_JFC, &arg);
 	if (ret) {
-		CDMA_LOG_ERR("wait jfc ioctl failed, ret = %d, errno = %d.\n", ret, errno);
+		CDMA_LOG_ERR("wait jfc ioctl failed, ret = %d, errno = %d.\n",
+			     ret, errno);
 		return -EFAULT;
 	}
 
