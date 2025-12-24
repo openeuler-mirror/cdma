@@ -14,7 +14,7 @@
 #include <stdatomic.h>
 #include <cdma_abi.h>
 
-#define CDMA_VERSION "1.0.1"
+#define CDMA_VERSION "1.0.2"
 /* cover the maximum file length(255) + path prefix */
 #define CDMA_MAX_DEV_NAME_LEN 300
 

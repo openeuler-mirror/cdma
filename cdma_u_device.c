@@ -135,8 +135,8 @@ static int cdma_query_device_info(struct dma_device *dev)
 
 	ret = ioctl(dev->fd, CDMA_SYNC, &hdr);
 	if (ret) {
-		CDMA_LOG_ERR("cdma query device info failed, ret = %d, errno = %d.\n",
-			     ret, errno);
+		CDMA_LOG_ERR("ioctl cdma query device info failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 

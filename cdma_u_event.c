@@ -36,7 +36,8 @@ static int cdma_cmd_get_async_event(struct cdma_u_context *u_ctx,
 	} else if (fds.revents == POLLIN) {
 		ret = ioctl(u_ctx->async_fd, CDMA_CMD_GET_ASYNC_EVENT, &ret_aeqe);
 		if (ret != 0) {
-			CDMA_LOG_ERR("get async event ioctl failed, ret=%d.\n", ret);
+			CDMA_LOG_ERR("get async event ioctl failed, ret = %d, errno = %d.\n",
+				     ret, errno);
 			return ret;
 		}
 
