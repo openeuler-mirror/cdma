@@ -48,7 +48,7 @@ int cdma_u_delete_ctp(struct dma_tp *tp)
 
 	ret = cdma_cmd_delete_ctp(tp);
 	if (ret)
-		CDMA_LOG_WARN("cdma delete tp cmd failed.\n");
+		CDMA_LOG_WARN("cdma delete tp cmd failed, ret = %d.\n", ret);
 
 	free(tp);
 
