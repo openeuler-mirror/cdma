@@ -63,6 +63,7 @@ dma_status cdma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	struct cdma_u_queue *cdma_queue;
 	dma_sge_t rmt_sge, local_sge;
 	dma_jfs_wr_t *bad_wr = NULL;
+	dma_tp_cfg_t *cfg;
 	int ret;
 
 	if (cdma_rw_check(rmt_seg, local_seg)) {
@@ -86,9 +87,12 @@ dma_status cdma_cas(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	}
 
 	cdma_queue = to_cdma_u_queue(queue);
+	cfg = &cdma_queue->cdma_tp->cfg;
+
 	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
 	if (ret) {
-		CDMA_LOG_ERR("post jfs for cas failed, ret = %d.\n", ret);
+		CDMA_LOG_ERR("post jfs for cas failed, ret = %d, seid = %u, deid = %u.\n",
+			     ret, cfg->seid, cfg->deid);
 		return DMA_STATUS_INVAL;
 	}
 
@@ -102,6 +106,7 @@ dma_status cdma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	struct cdma_u_queue *cdma_queue;
 	dma_sge_t rmt_sge, local_sge;
 	dma_jfs_wr_t *bad_wr = NULL;
+	dma_tp_cfg_t *cfg;
 	int ret;
 
 	if (cdma_rw_check(rmt_seg, local_seg)) {
@@ -118,9 +123,12 @@ dma_status cdma_faa(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	wr.faa.operand = operand;
 
 	cdma_queue = to_cdma_u_queue(queue);
+	cfg = &cdma_queue->cdma_tp->cfg;
+
 	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
 	if (ret) {
-		CDMA_LOG_ERR("post jfs for faa failed, ret = %d.\n", ret);
+		CDMA_LOG_ERR("post jfs for faa failed, ret = %d, seid = %u, deid = %u.\n",
+			     ret, cfg->seid, cfg->deid);
 		return DMA_STATUS_INVAL;
 	}
 
@@ -135,6 +143,7 @@ dma_status cdma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	struct cdma_u_queue *cdma_queue;
 	dma_sge_t rmt_sge, local_sge;
 	dma_jfs_wr_t *bad_wr = NULL;
+	dma_tp_cfg_t *cfg;
 	int ret;
 
 	if (cdma_rw_check(rmt_seg, local_seg)) {
@@ -161,9 +170,12 @@ dma_status cdma_write(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	wr.rw.dst.sge = &rmt_sge;
 
 	cdma_queue = to_cdma_u_queue(queue);
+	cfg = &cdma_queue->cdma_tp->cfg;
+
 	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
 	if (ret) {
-		CDMA_LOG_ERR("post jfs for write failed, ret = %d.\n", ret);
+		CDMA_LOG_ERR("post jfs for write failed, ret = %d, seid = %u, deid = %u.\n",
+			     ret, cfg->seid, cfg->deid);
 		return DMA_STATUS_INVAL;
 	}
 
@@ -177,6 +189,7 @@ dma_status cdma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	struct cdma_u_queue *cdma_queue;
 	dma_sge_t rmt_sge, local_sge;
 	dma_jfs_wr_t *bad_wr = NULL;
+	dma_tp_cfg_t *cfg;
 	int ret;
 
 	if (cdma_rw_check(rmt_seg, local_seg)) {
@@ -195,9 +208,12 @@ dma_status cdma_read(struct dma_queue *queue, struct dma_seg *rmt_seg,
 	wr.rw.dst.sge = &local_sge;
 
 	cdma_queue = to_cdma_u_queue(queue);
+	cfg = &cdma_queue->cdma_tp->cfg;
+
 	ret = cdma_u_post_jfs_wr(cdma_queue->cdma_jfs, &wr, &bad_wr);
 	if (ret) {
-		CDMA_LOG_ERR("post jfs for read failed, ret = %d.\n", ret);
+		CDMA_LOG_ERR("post jfs for read failed, ret = %d, seid = %u, deid = %u.\n",
+			     ret, cfg->seid, cfg->deid);
 		return DMA_STATUS_INVAL;
 	}
 
