@@ -63,7 +63,7 @@
 	offsetof(containing_type, member)
 #define container_of(member_ptr, containing_type, member)	\
 	((containing_type *)					\
-	((void *)(member_ptr)					\
+	((char *)(member_ptr)					\
 	- container_off(containing_type, member))		\
 	+ (uint8_t)check_types_match(*(member_ptr), ((containing_type *)0)->member))
 #endif
@@ -99,7 +99,7 @@ struct cdma_u_jetty_queue {
 	uintptr_t *wrid;
 	pthread_spinlock_t lock;
 	uint32_t max_inline_size;
-	void *dwqe_addr;
+	void volatile *dwqe_addr;
 
 	uint32_t sqe_bb_cnt;
 	uint32_t max_sge_num;

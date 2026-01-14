@@ -36,7 +36,8 @@ static int cdma_cmd_get_async_event(struct cdma_u_context *u_ctx,
 	} else if (fds.revents == POLLIN) {
 		ret = ioctl(u_ctx->async_fd, CDMA_CMD_GET_ASYNC_EVENT, &ret_aeqe);
 		if (ret != 0) {
-			CDMA_LOG_ERR("get async event ioctl failed, ret=%d.\n", ret);
+			CDMA_LOG_ERR("get async event ioctl failed, ret = %d, errno = %d.\n",
+				     ret, errno);
 			return ret;
 		}
 
@@ -69,8 +70,16 @@ static int cdma_cmd_get_async_event(struct cdma_u_context *u_ctx,
 int cdma_poll_queue(struct dma_queue *queue, uint32_t cr_cnt, struct dma_cr *cr)
 {
 	struct cdma_u_queue *cdma_queue = to_cdma_u_queue(queue);
+	dma_tp_cfg_t *cfg = &cdma_queue->cdma_tp->cfg;
+	int npolled;
 
-	return cdma_u_poll_jfc(cdma_queue->cdma_jfc, cr_cnt, cr);
+	npolled = cdma_u_poll_jfc(cdma_queue->cdma_jfc, cr_cnt, cr);
+	if (npolled > 0 && cr->status != DMA_CR_SUCCESS) {
+		CDMA_LOG_ERR("poll jfc npolled = %d, seid = %u, deid = %u\n",
+			npolled, cfg->seid, cfg->deid);
+	}
+
+	return npolled;
 }
 
 int cdma_wait_queue(struct dma_queue *queue, uint32_t cr_cnt, int timeout,
