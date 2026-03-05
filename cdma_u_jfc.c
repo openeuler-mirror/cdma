@@ -48,7 +48,7 @@ static int cdma_u_alloc_jfc_buf(struct cdma_u_context *cdma_ctx,
 	ret = cdma_u_alloc_queue_buf(&jfc->cq, depth, cdma_ctx->cqe_size,
 								 CDMA_HW_PAGE_SIZE, false);
 	if (ret) {
-		CDMA_LOG_ERR("alloc user jfc wqe buf failed.\n");
+		CDMA_LOG_ERR("alloc user jfc wqe buf failed, ret = %d.\n", ret);
 		return ret;
 	}
 
@@ -298,8 +298,9 @@ static enum jfc_poll_state cdma_parse_cqe_for_jfc(struct cdma_u_jfc_cqe *cqe,
 	cr->user_ctx = queue->wrid[queue->ci & queue->baseblk_mask];
 
 	if (cqe->status) {
-		CDMA_LOG_WARN("get sq %u cqe status abnormal, ci = %u, pi = %u.\n",
-					  queue->idx, queue->ci, queue->pi);
+		CDMA_LOG_WARN("get sq %u cqe status abnormal, ci = %u,"
+			      " pi = %u, status = %u, substatus = %u.\n", queue->idx,
+			      queue->ci, queue->pi, cqe->status, cqe->substatus);
 	}
 
 	if (cdma_u_update_flush_cr(queue, cqe, cr))
@@ -345,7 +346,8 @@ static int cdma_cmd_wait_jfc(int jfce_fd, uint32_t jfc_cnt, int time_out)
 
 	ret = ioctl(jfce_fd, CDMA_CMD_WAIT_JFC, &arg);
 	if (ret) {
-		CDMA_LOG_ERR("wait jfc ioctl failed, ret = %d, errno = %d.\n", ret, errno);
+		CDMA_LOG_ERR("wait jfc ioctl failed, ret = %d, errno = %d.\n",
+			     ret, errno);
 		return -EFAULT;
 	}
 
@@ -423,13 +425,13 @@ dma_jfc_t *cdma_u_create_jfc(struct dma_context *ctx, dma_jfc_cfg_t *cfg)
 
 	ret = cdma_u_alloc_jfc_buf(cdma_ctx, cfg, cdma_jfc);
 	if (ret) {
-		CDMA_LOG_ERR("alloc jfc buf failed.\n");
+		CDMA_LOG_ERR("alloc jfc buf failed, ret = %d.\n", ret);
 		goto err_alloc_jfc;
 	}
 
 	ret = cdma_cmd_create_jfc(ctx, cdma_jfc, cfg);
 	if (ret) {
-		CDMA_LOG_ERR("create jfc failed.\n");
+		CDMA_LOG_ERR("create jfc failed, ret = %d.\n", ret);
 		goto err_create_jfc;
 	}
 
@@ -595,7 +597,7 @@ dma_status cdma_u_rearm_jfc(dma_jfc_t *jfc, bool solicited_only)
 	db.type = CDMA_CQ_ARM_DB;
 	db.jfcn = cdma_jfc->cq.idx;
 
-	cdma_u_write64((uint64_t *)(cdma_ctx->db.addr + CDMA_JFC_HW_DB_OFFSET),
+	cdma_u_write64((uint64_t *)((char volatile *)cdma_ctx->db.addr + CDMA_JFC_HW_DB_OFFSET),
 				   (uint64_t *)&db);
 
 	return DMA_STATUS_OK;

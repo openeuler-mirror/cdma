@@ -143,7 +143,7 @@ struct dma_jfs *cdma_u_create_jfs(struct dma_context *ctx,
 	if (cdma_u_alloc_db(ctx, &jfs->sq.db))
 		goto err_alloc_db;
 
-	jfs->sq.dwqe_addr = (void *)jfs->sq.db.addr;
+	jfs->sq.dwqe_addr = jfs->sq.db.addr;
 
 	return &jfs->base;
 
@@ -177,7 +177,7 @@ int cdma_u_delete_jfs(struct dma_jfs *jfs)
 
 	ret = cdma_u_cmd_delete_jfs(jfs);
 	if (ret)
-		CDMA_LOG_WARN("cdma delete jfs cmd failed.\n");
+		CDMA_LOG_WARN("cdma delete jfs cmd failed, ret = %d.\n", ret);
 
 	if (!!jfs->jfs_cfg.jfc)
 		cdma_u_clean_jfc((dma_jfc_t *)jfs->jfs_cfg.jfc, jfs->jfs_id);
@@ -251,7 +251,7 @@ static int cdma_u_fill_write_sqe(struct cdma_jfs_sqe_ctl *wqe_ctl,
 	struct cdma_wqe_sge *sge;
 	dma_sge_t *sge_info;
 
-	sge = (struct cdma_wqe_sge *)((void *)wqe_ctl + cdma_get_ctl_len(wr->opcode));
+	sge = (struct cdma_wqe_sge *)((char *)wqe_ctl + cdma_get_ctl_len(wr->opcode));
 
 	if (cdma_fill_multi_sge(wqe_ctl, wr, sge)) {
 		CDMA_LOG_ERR("cdma fill sw sge invalid.\n");
@@ -269,14 +269,15 @@ static int cdma_u_fill_write_sqe(struct cdma_jfs_sqe_ctl *wqe_ctl,
 				      (uint32_t)SQE_CTL_RMA_ADDR_BIT;
 
 	if (wr->opcode == CDMA_WR_OPC_WRITE_NOTIFY) {
-		token_info = (struct cdma_token_info *)((void *)wqe_ctl + SQE_NOTIFY_TOKEN_ID_FIELD);
+		token_info = (struct cdma_token_info *)((char *)wqe_ctl +
+							SQE_NOTIFY_TOKEN_ID_FIELD);
 		token_info->token_id = wr->rw.notify_tokenid;
 		token_info->token_value = wr->rw.notify_tokenvalue;
 
-		memcpy((void *)wqe_ctl + SQE_NOTIFY_ADDR_FIELD,
-		       &wr->rw.notify_addr, sizeof(uint64_t));
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
-		       &wr->rw.notify_data, sizeof(uint64_t));
+		memcpy((char *)wqe_ctl + SQE_NOTIFY_ADDR_FIELD, &wr->rw.notify_addr,
+		       sizeof(uint64_t));
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD, &wr->rw.notify_data,
+		       sizeof(uint64_t));
 	}
 
 	return 0;
@@ -398,15 +399,15 @@ static int cdma_u_fill_cas_sqe(struct cdma_jfs_sqe_ctl *wqe_ctl, dma_jfs_wr_t *w
 								  (uint32_t)SQE_CTL_RMA_ADDR_BIT;
 
 	if (sge->length <= CDMA_ATOMIC_LEN_8) {
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
-			   &wr->cas.swap_data, sge->length);
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD + sge->length,
-			   &wr->cas.cmp_data, sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD, &wr->cas.swap_data,
+		       sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD + sge->length,
+		       &wr->cas.cmp_data, sge->length);
 	} else {
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
-			   (char *)wr->cas.swap_addr, sge->length);
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD + sge->length,
-			   (char *)wr->cas.cmp_addr, sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
+		       (char *)wr->cas.swap_addr, sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD + sge->length,
+		       (char *)wr->cas.cmp_addr, sge->length);
 	}
 
 	return 0;
@@ -438,11 +439,11 @@ static int cdma_u_fill_faa_sqe(struct cdma_jfs_sqe_ctl *wqe_ctl, dma_jfs_wr_t *w
 								  (uint32_t)SQE_CTL_RMA_ADDR_BIT;
 
 	if (sge->length <= CDMA_ATOMIC_LEN_8) {
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
-			   &wr->faa.operand, sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD, &wr->faa.operand,
+		       sge->length);
 	} else {
-		memcpy((void *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
-			   (void *)wr->faa.operand_addr, sge->length);
+		memcpy((char *)wqe_ctl + SQE_ATOMIC_DATA_FIELD,
+		       (void *)wr->faa.operand_addr, sge->length);
 	}
 
 	return 0;
@@ -486,10 +487,9 @@ static int cdma_set_sqe(struct cdma_jfs_sqe_ctl *wqe_ctl,
 	memcpy(wqe_ctl->rmt_eid, &wr->rmt_eid, sizeof(wr->rmt_eid));
 
 	ret = cdma_fill_normal_sge(wqe_ctl, wr);
-	if (ret) {
-		CDMA_LOG_ERR("cdma fill normal sge failed, opcode = %u in wr.\n",
-					 (uint8_t)wr->opcode);
-	}
+	if (ret)
+		CDMA_LOG_ERR("cdma fill normal sge failed, opcode = %u in wr, ret = %d.\n",
+			     (uint8_t)wr->opcode, ret);
 
 	return ret;
 }
@@ -586,7 +586,7 @@ static void cdma_write_dsqe(struct cdma_u_jetty_queue *sq,
 
 static void cdma_update_sq_db(struct cdma_u_jetty_queue *sq)
 {
-	uint32_t *db_addr = (uint32_t *)(sq->db.addr + CDMA_DOORBELL_OFFSET);
+	uint32_t volatile *db_addr = (uint32_t volatile *)((char volatile *)sq->db.addr + CDMA_DOORBELL_OFFSET);
 	*db_addr = sq->pi;
 }
 

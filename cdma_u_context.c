@@ -43,8 +43,8 @@ static int cdma_create_kernel_context(struct cdma_u_context *u_ctx)
 
 	ret = ioctl(u_ctx->dma_ctx.dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("cdma create kernel ctx failed, ret = %d, errno = %d.\n",
-			     ret, errno);
+		CDMA_LOG_ERR("ioctl cdma create kernel ctx failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return ret;
 	}
 
@@ -70,8 +70,8 @@ static void cdma_delete_kernel_context(struct cdma_u_context *u_ctx)
 
 	ret = ioctl(u_ctx->dma_ctx.dma_dev->fd, CDMA_SYNC, &hdr);
 	if (ret != 0) {
-		CDMA_LOG_ERR("cdma delete kernel ctx failed, ret = %d, errno = %d.\n",
-			     ret, errno);
+		CDMA_LOG_ERR("ioctl cdma delete kernel ctx failed, ret = %d, errno = %d, cmd = %u.\n",
+			     ret, errno, hdr.command);
 		return;
 	}
 }

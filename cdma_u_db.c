@@ -190,6 +190,16 @@ out:
 	pthread_mutex_unlock(&ctx->page_mutex);
 }
 
+static uint32_t cdma_get_dsqe_db_offset(struct cdma_u_context *cdma_ctx,
+					struct cdma_u_doorbell *db)
+{
+	if (db->type != CDMA_MMAP_JETTY_DSQE)
+		return 0;
+
+	return (db->id + 1) % (cdma_ctx->page_size / CDMA_HW_PAGE_SIZE) *
+	       CDMA_HW_PAGE_SIZE;
+}
+
 int cdma_u_alloc_db(struct dma_context *ctx, struct cdma_u_doorbell *db)
 {
 	struct cdma_u_context *cdma_ctx = to_cdma_u_ctx(ctx);
@@ -203,6 +213,8 @@ int cdma_u_alloc_db(struct dma_context *ctx, struct cdma_u_doorbell *db)
 			      db->id, db->type);
 		return -EINVAL;
 	}
+
+	db->addr += cdma_get_dsqe_db_offset(cdma_ctx, db);
 
 	return 0;
 }
@@ -218,6 +230,7 @@ void cdma_u_free_db(struct dma_context *ctx, struct cdma_u_doorbell *db)
 
 	cdma_ctx = to_cdma_u_ctx(ctx);
 
+	db->addr -= cdma_get_dsqe_db_offset(cdma_ctx, db);
 	munmap((void *)db->addr, (size_t)cdma_ctx->page_size);
 	db->addr = NULL;
 }
